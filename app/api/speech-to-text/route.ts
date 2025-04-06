@@ -1,3 +1,10 @@
+import { NextRequest, NextResponse } from "next/server";
+import { SpeechClient } from "@google-cloud/speech";
+console.log("process.env:", process.env); // Add this line to inspect process.env
+
+const client = new SpeechClient({
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+});
 // import { SpeechClient } from "@google-cloud/speech";
 import { NextRequest, NextResponse } from "next/server";
 // import credentials from "@/nimbus.json";

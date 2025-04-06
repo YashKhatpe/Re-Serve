@@ -47,21 +47,7 @@ export async function POST(req: NextRequest) {
         });
         return NextResponse.json(response.data);
 
-        // // Configure request
-        // const request = {
-        //     input: { text },
-        //     voice: { languageCode: 'en-US', ssmlGender: 'MALE' as const },
-        //     audioConfig: { audioEncoding: 'MP3' as const },
-        // };
 
-        // // Perform the text-to-speech request
-        // const [response] = await client.synthesizeSpeech(request);
-
-
-        // // The response's audioContent is base64-encoded
-        // const audioContent = Buffer.from(response.audioContent as Uint8Array).toString('base64');
-
-        // return NextResponse.json({ audioContent });
     } catch (error) {
         console.error('Error in text-to-speech API route:', error);
         return NextResponse.json(

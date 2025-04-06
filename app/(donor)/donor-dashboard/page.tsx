@@ -7,34 +7,62 @@ import { Sidebar } from "@/components/sidebar";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { TotalRevenue } from "@/components/dashboard/total-revenue";
 import { VisitorInsights } from "@/components/dashboard/visitor-insights";
-import { DollarSign, ShoppingCart, Package, Users, Download } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Users, Download, FileText, Calendar } from "lucide-react";
 import Link from "next/link";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calender";
+import { format } from "date-fns";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [openStartDate, setOpenStartDate] = useState(false);
+  const [openEndDate, setOpenEndDate] = useState(false);
 
-  // ✅ Export Orders Function (Excel)
-  const handleExport = async () => {
+  // Generate Batch Receipts Function
+  const handleGenerateReceipts = async () => {
+    if (!startDate || !endDate) {
+      alert("Please select both start and end dates");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/excelExport");
-
-      if (!response.ok) {
-        console.error("Failed to download Excel file", response);
-        throw new Error(`Failed to download Excel file: ${response}`);
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "orders.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      // Format dates for API call: YYYY-MM-DD
+      const formattedStartDate = format(startDate, "yyyy-MM-dd");
+      const formattedEndDate = format(endDate, "yyyy-MM-dd");
+      
+      // Open in new tab to download ZIP file
+      window.open(
+        `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
+        '_blank'
+      );
     } catch (error) {
-      console.error("Error downloading Excel:", error);
+      console.error("Error generating receipts:", error);
+      alert("Failed to generate tax receipts. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  // Generate Last Month's Receipts (Quick Access)
+  const handleGenerateLastMonth = () => {
+    setLoading(true);
+    try {
+      const today = new Date();
+      const lastMonth = new Date();
+      lastMonth.setMonth(today.getMonth() - 1);
+      
+      // Format to YYYY-MM-DD
+      const formattedStartDate = format(new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1), "yyyy-MM-dd");
+      const formattedEndDate = format(new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0), "yyyy-MM-dd");
+      
+      window.open(
+        `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
+        '_blank'
+      );
+    } catch (error) {
+      console.error("Error generating receipts:", error);
     }
     setLoading(false);
   };
@@ -58,9 +86,14 @@ export default function Home() {
                     Donate
                   </Button>
                 </Link>
-                <Button onClick={handleExport} variant="outline" size="sm" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  {loading ? "Exporting..." : "Export to Excel"}
+                <Button 
+                  onClick={handleGenerateLastMonth}
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  {loading ? "Generating..." : "Last Month's Receipts"}
                 </Button>
               </div>
             </div>
@@ -99,6 +132,81 @@ export default function Home() {
                 trend="up"
               />
             </div>
+
+            {/* Tax Receipt Generator Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-medium">Generate Tax Deduction Receipts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row gap-4 items-end">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">Start Date</label>
+                    <Popover open={openStartDate} onOpenChange={setOpenStartDate}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-[240px] justify-start text-left font-normal"
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {startDate ? format(startDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={startDate}
+                          onSelect={(date) => {
+                            setStartDate(date);
+                            setOpenStartDate(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">End Date</label>
+                    <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-[240px] justify-start text-left font-normal"
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={endDate}
+                          onSelect={(date) => {
+                            setEndDate(date);
+                            setOpenEndDate(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleGenerateReceipts}
+                    disabled={!startDate || !endDate || loading}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {loading ? "Generating..." : "Generate Receipts"}
+                  </Button>
+                </div>
+                
+                <div className="mt-4 text-sm text-gray-500">
+                  <p>Generate tax deduction receipts for food donations within a specific date range.</p>
+                  <p className="mt-1 text-red-600 font-medium">Note: Once generated, receipts cannot be modified to prevent duplicate tax claims.</p>
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <TotalRevenue />
