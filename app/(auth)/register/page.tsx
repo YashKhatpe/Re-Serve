@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FOOD_PREFERENCES } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 import { toast} from "sonner"
+
 const donorFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -91,7 +92,7 @@ export default function RegisterPage() {
       // terms: false
     }
   });
-
+  
 async function onDonorSubmit(data: z.infer<typeof donorFormSchema>) {
   console.log("Submitting Donor Form:", data);
   
@@ -208,6 +209,7 @@ catch (error) {
   }
 
   return (
+
     <div className="min-h-screen bg-secondary/30 flex items-center justify-center">
       <div className="container mx-auto py-8 flex flex-col md:flex-row gap-8 items-center">
         

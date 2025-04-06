@@ -1,14 +1,17 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { SetStateAction, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Filter, MapPin, Search } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { supabase } from "@/lib/supabase";
 import { Donation, useDonation } from "@/context/donation-context";
 import MapClientWrapper from "@/components/food-map/MapClientWrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FOOD_PREFERENCES } from "@/lib/constants";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +22,7 @@ import {
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import audioBufferToWav from "audiobuffer-to-wav";
+import { calculateDistance, extractLocationFromMapUrl } from "@/lib/mapUtils";
 
 export default function FoodListingPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -36,6 +40,14 @@ export default function FoodListingPage() {
   const audioChunksRef = useRef<Blob[]>([]);
   const router = useRouter();
   const { setSelectedDonation } = useDonation();
+
+  const [filteredDonations, setFilteredDonations] = useState<Donation[] | []>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [maxDistance, setMaxDistance] = useState(50); // Default max distance in km
+  const [selectedFoodTypes, setSelectedFoodTypes] = useState<string[]>([]);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
 
   useEffect(() => {
     async function checkAuth() {
@@ -59,63 +71,136 @@ export default function FoodListingPage() {
   }, [router]);
 
   useEffect(() => {
+    async function getUserLocation() {
+      // If user is an NGO, try to get location from their address_map_link
+      if (userType === "ngo" && userId) {
+        try {
+          const { data: ngoData, error: ngoError } = await supabase
+            .from("ngo")
+            .select("address_map_link")
+            .eq("id", userId)
+            .single();
+
+          if (ngoError) {
+            console.error("Error fetching NGO data:", ngoError.details);
+          } else if (ngoData && ngoData.address_map_link) {
+            // Extract coordinates from the map URL
+            const locationResult = extractLocationFromMapUrl(ngoData.address_map_link);
+            if (locationResult.location) {
+              console.log("Using NGO location from address_map_link:", locationResult.location);
+              setUserLocation(locationResult.location);
+              return; // Exit early as we've set the location
+            }
+          }
+        } catch (error) {
+          console.error("Error processing NGO location:", error);
+        }
+      }
+    }
+
+    getUserLocation();
+  }, [userId, userType]);
+
+  useEffect(() => {
     async function fetchDonations() {
       let latLng = { lat: 0, lng: 0 };
-      const { data, error } = await supabase.from("donor_form").select("*");
+      const { data, error } = await supabase.from('donor_form').select('*');
       if (error) {
         console.error("Error fetching donations:", error);
       } else {
-        setDonations(data);
         const updatedDonations: Donation[] = [];
-        for (let donation of data) {
+        for(let donation of data){
           const { data: donorData, error: donorError } = await supabase
-            .from("donor")
-            .select("address_map_link") // Select all columns from the donor table
-            .eq("id", donation.donor_id)
-            .single();
+          .from('donor')
+          .select('address_map_link')
+          .eq('id', donation.donor_id)
+          .single();
 
-          try {
-            const apiKey = "AIzaSyBn1CMaRL-FEezXOMgrGE-B6k5mjHezIW4"; // Replace with your actual API key
-            let apiUrl = donorData?.address_map_link;
-
-            if (apiUrl) {
-              const url = new URL(apiUrl);
-              url.searchParams.append("key", apiKey); // Add API key as a query parameter
-              apiUrl = url.toString();
+          if (donorData && donorData.address_map_link) {
+            // Extract coordinates from the map URL
+            const locationResult = extractLocationFromMapUrl(donorData.address_map_link);
+            if (locationResult.location) {
+              latLng = locationResult.location;
             }
+          }
 
-            const res = await axios.get(apiUrl, {
-              maxRedirects: 0,
-              validateStatus: null,
-            });
-
-            const longUrl = res.headers.location;
-            const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
-            const match = longUrl.match(regex);
-            if (match) {
-              latLng = { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
-            }
-          } catch (e) {
-            console.log(e);
+          // Calculate distance if user location is available
+          let distance = 0;
+          if (userLocation && latLng.lat !== 0 && latLng.lng !== 0) {
+            distance = calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              latLng.lat,
+              latLng.lng
+            );
           }
 
           const updatedDonation: Donation = {
             ...donation,
             location: latLng,
+            distance: distance
           };
-          updatedDonations.push({ ...donation, location: latLng });
+          updatedDonations.push(updatedDonation);
         }
+
+        // Sort by distance
+        updatedDonations.sort((a, b) => a.distance - b.distance);
+
+        // Log unique food types for debugging
+        const uniqueFoodTypes = [...new Set(updatedDonations.map(d => d.food_type))];
+        console.log('Available food types:', uniqueFoodTypes);
+
         setDonations(updatedDonations);
-        console.log(donations);
+        setFilteredDonations(updatedDonations);
       }
     }
     fetchDonations();
-  }, []);
+  }, [userLocation]);
+
+  // Apply filters when any filter criteria changes
+  useEffect(() => {
+    if (donations.length === 0) return;
+
+    let filtered = [...donations];
+
+    // Apply search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(donation =>
+        donation.food_name.toLowerCase().includes(term) ||
+        donation.food_type.toLowerCase().includes(term)
+      );
+    }
+
+    // Apply food type filter
+    if (selectedFoodTypes.length > 0) {
+      filtered = filtered.filter(donation =>
+        selectedFoodTypes.includes(donation.food_type)
+      );
+    }
+
+    // Apply distance filter
+    if (userLocation) {
+      filtered = filtered.filter(donation => donation.distance <= maxDistance);
+    }
+
+    setFilteredDonations(filtered);
+    console.log('Filtered donations:', filtered.length);
+    console.log('Filter criteria:', { searchTerm, selectedFoodTypes, maxDistance });
+  }, [searchTerm, selectedFoodTypes, maxDistance, donations, userLocation]);
 
   const handleCardClick = (donation: Donation) => {
     setSelectedDonation(donation);
     router.push("/products");
   };
+  const toggleFoodType = (type: string) => {
+    setSelectedFoodTypes(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
 
   const handleVoiceQuery = async () => {
     setUserQuery("");
@@ -344,10 +429,14 @@ export default function FoodListingPage() {
 
           <TabsContent value="list">
             <div className="flex justify-between">
-              <div></div>
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
               <h1 className="text-3xl font-bold mb-6 text-center">
                 Find Food Rescuers
               </h1>
+
+            </div>
+
+
               <Button onClick={handleVoiceQuery}>
                 Try our voice based query
               </Button>
@@ -425,40 +514,114 @@ export default function FoodListingPage() {
                 {/* </main> */}
               </DialogContent>
             </Dialog>
-            <div className="relative mb-6">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
-              <Input
-                placeholder="Search nearby NGOs..."
-                className="pl-12 w-full bg-gray-100 shadow-md border-none rounded-xl py-3"
-              />
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="relative flex-grow">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
+                <Input
+                  placeholder="Search by food name or type..."
+                  className="pl-12 w-full bg-gray-100 shadow-md border-none rounded-xl py-3"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Filter size={18} />
+                Filters
+              </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {donations.map((donation) => (
-                <div
-                  key={donation.id}
-                  className="bg-white shadow-lg rounded-xl overflow-hidden transform transition hover:scale-105 cursor-pointer"
-                  onClick={() => handleCardClick(donation)}
-                >
-                  <div className="w-full h-48 relative">
-                    <Image
-                      src={donation.food_image}
-                      alt={donation.food_name}
-                      fill
-                      className="object-cover"
+            {/* Filter Panel */}
+            {showFilters && (
+              <div className="bg-gray-100 p-4 rounded-lg mb-6 shadow-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Food Type Filters */}
+                  <div>
+                    <h3 className="font-semibold mb-2">Food Type</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {/* Use both FOOD_PREFERENCES and any unique food types from the data */}
+                      {[
+                        ...FOOD_PREFERENCES,
+                        // Add any food types from the data that aren't in FOOD_PREFERENCES
+                        ...Array.from(new Set(donations.map(d => d.food_type)))
+                          .filter(type => !FOOD_PREFERENCES.some(p => p.value === type))
+                          .map(type => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) }))
+                      ].map((preference) => (
+                        <div key={preference.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`filter-${preference.value}`}
+                            checked={selectedFoodTypes.includes(preference.value)}
+                            onCheckedChange={() => toggleFoodType(preference.value)}
+                          />
+                          <label htmlFor={`filter-${preference.value}`} className="text-sm cursor-pointer">
+                            {preference.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Distance Filter */}
+                  <div>
+                    <h3 className="font-semibold mb-2">Maximum Distance: {maxDistance} km</h3>
+                    <Slider
+                      value={maxDistance}
+                      min={1}
+                      max={100}
+                      onChange={(e) => setMaxDistance(Number(e.target.value))}
+                      className="w-full"
                     />
                   </div>
-                  <div className="p-5">
-                    <h2 className="text-xl font-bold text-gray-900">
-                      {donation.food_name}
-                    </h2>
-                    <p className="text-emerald-600">{donation.food_type}</p>
-                    <p className="text-gray-600">
-                      Expires in{" "}
-                      {new Date(donation.expiry_date_time).toLocaleString()}
-                    </p>
-                  </div>
                 </div>
-              ))}
+
+                {/* Reset Filters Button */}
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSelectedFoodTypes([]);
+                      setMaxDistance(50);
+                    }}
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <p className="text-gray-600 mb-4">
+              Showing {filteredDonations.length} of {donations.length} donations
+            </p>
+
+
+            {/* Food Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredDonations.length > 0 ? (
+                filteredDonations.map((donation) => (
+                  <div key={donation.id} className="bg-white shadow-lg rounded-xl overflow-hidden transform transition hover:scale-105 cursor-pointer" onClick={() => handleCardClick(donation)}>
+                    <div className="w-full h-48 relative">
+                      <Image src={donation.food_image} alt={donation.food_name} fill className="object-cover" />
+                    </div>
+                    <div className="p-5">
+                      <h2 className="text-xl font-bold text-gray-900">{donation.food_name}</h2>
+                      <p className="text-emerald-600">{donation.food_type}</p>
+                      <p className="text-gray-600">Expires in {new Date(donation.expiry_date_time).toLocaleString()}</p>
+                      {donation.distance > 0 && (
+                        <div className="flex items-center mt-2 text-gray-500">
+                          <MapPin size={16} className="mr-1" />
+                          <span>{donation.distance.toFixed(1)} km away</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-3 text-center py-10">
+                  <p className="text-gray-500">No donations match your filters. Try adjusting your search criteria.</p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -467,11 +630,10 @@ export default function FoodListingPage() {
               Food Donation Map
             </h1>
             <p className="text-center text-gray-600 max-w-2xl mx-auto mb-4">
-              Interactive map showing locations where food donations are needed.
               Hover over or click on a marker to see details about the food
               available for donation.
             </p>
-            <MapClientWrapper donations={donations} />
+            <MapClientWrapper donations={filteredDonations} />
           </TabsContent>
         </Tabs>
       </div>
