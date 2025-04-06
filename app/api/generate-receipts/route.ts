@@ -1,19 +1,20 @@
 export const runtime = "nodejs";
 
-import { createClient } from "@supabase/supabase-js";
+// import { createClient } from "@supabase/supabase-js";
 // Remove PDFKit import which is causing issues
 // import PDFDocument from "pdfkit";
+import { supabase } from "@/lib/supabase";
 import JSZip from "jszip";
 
 // Initialize Supabase client with error handling
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error("Missing Supabase environment variables");
-}
+// if (!supabaseUrl || !supabaseKey) {
+//   console.error("Missing Supabase environment variables");
+// }
 
-const supabase = createClient(supabaseUrl || "", supabaseKey || "");
+// const supabase = createClient(supabaseUrl || "", supabaseKey || "");
 
 // Define types for database structure
 type Donor = {
