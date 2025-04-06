@@ -33,7 +33,6 @@ type NGO = {
   name: string;
   address_map_link: string;
   reg_no?: string;
-  registration_number?: string;
   food_preference: string;
 };
 
@@ -135,7 +134,6 @@ export async function GET(request: Request) {
           name,
           address_map_link,
           reg_no,
-          registration_number,
           food_preference
         ),
         delivery_person_name,
@@ -169,10 +167,6 @@ export async function GET(request: Request) {
     // Cast data to our Order type for type safety
     const order = data as unknown as Order;
 
-    // Fix for schema differences - handle both reg_no and registration_number
-    if (order.ngo && !order.ngo.reg_no && order.ngo.registration_number) {
-      order.ngo.reg_no = order.ngo.registration_number;
-    }
 
     // Calculate the donation amount (with a fallback if serves is undefined)
     const serves = order.serves || 0;

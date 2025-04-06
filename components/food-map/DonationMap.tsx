@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { Donation, useDonation } from "@/context/donation-context";
 import DonationMarker from './DonationMarker';
@@ -17,16 +17,29 @@ const mapContainerStyle = {
 };
 
 export default function DonationMap({ donations }: DonationMapProps) {
-  // Calculate center point from all markers (average lat/lng)
-  
-  
+  // Group donations by location
+  const groupedDonations = useMemo(() => {
+    const groups: { [key: string]: Donation[] } = {};
 
+    donations.forEach(donation => {
+      // Create a key based on lat/lng with limited precision to group nearby points
+      const key = `${donation.location.lat.toFixed(5)},${donation.location.lng.toFixed(5)}`;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(donation);
+    });
+
+    return groups;
+  }, [donations]);
+
+  // Calculate center point from all markers (average lat/lng)
   const center = donations.length > 0
     ? {
         lat: donations.reduce((sum, d) => sum + d.location.lat, 0) / donations.length,
         lng: donations.reduce((sum, d) => sum + d.location.lng, 0) / donations.length
       }
-    : { lat: 40.7128, lng: -74.0060 }; // Default center (New York)
+    : { lat: 20.5937, lng: 78.9629 }; // Default center (India)
 
   // Load the Google Maps JavaScript API
   const { isLoaded, loadError } = useJsApiLoader({
@@ -68,10 +81,17 @@ export default function DonationMap({ donations }: DonationMapProps) {
           fullscreenControl: true,
         }}
       >
-        {donations.map(donation => (
-          <DonationMarker key={donation.id} donation={donation} />
-        ))}
+        {Object.entries(groupedDonations).map(([locationKey, donationsAtLocation]) => {
+          const [lat, lng] = locationKey.split(',').map(Number);
+          return (
+            <DonationMarker
+              key={locationKey}
+              position={{ lat, lng }}
+              donations={donationsAtLocation}
+            />
+          );
+        })}
       </GoogleMap>
     </div>
   );
-} 
+}
