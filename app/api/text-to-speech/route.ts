@@ -1,13 +1,13 @@
 // app/api/text-to-speech/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+// import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import axios from 'axios';
 
 // Initialize the client with Google Cloud credentials
 // In production, use environment variables or other secure methods to store credentials
-const client = new TextToSpeechClient({
-    keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
+// const client = new TextToSpeechClient({
+//     keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+// });
 
 export async function POST(req: NextRequest) {
     try {
@@ -20,9 +20,8 @@ export async function POST(req: NextRequest) {
                 { status: 400 }
             );
         }
-
         const apikey = process.env.API_KEY;
-        const endPoint = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apikey}`;
+        const endPoint = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apikey}`;
         const payload = {
             "audioConfig": {
                 "audioEncoding": "MP3",
@@ -46,7 +45,6 @@ export async function POST(req: NextRequest) {
                 'Content-Type': 'application/json'
             }
         });
-
         return NextResponse.json(response.data);
 
         // // Configure request

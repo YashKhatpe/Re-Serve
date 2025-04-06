@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Mic, Volume2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -93,8 +93,6 @@ export default function DonatePage() {
     },
   });
 
-
-
   async function onSubmit(data: z.infer<typeof donationFormSchema>) {
     console.log(data);
     if (!userId) {
@@ -111,32 +109,33 @@ export default function DonatePage() {
       // Upload image to Supabase Storage if a file is selected
 
       const file = data.food_image;
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('food_image')
-        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+        .from("food_image")
+        .upload(fileName, file, { cacheControl: "3600", upsert: false });
 
       if (uploadError) throw uploadError;
 
       // Get the public URL for the uploaded file
       const { data: publicUrlData } = supabase.storage
-        .from('food_image')
+        .from("food_image")
         .getPublicUrl(fileName);
 
       if (publicUrlData) {
         foodImageUrl = publicUrlData.publicUrl;
       }
 
-
       const uniqueId = uuidv4();
       const { error } = await supabase.from("donor_form").insert({
         id: uniqueId,
         food_name: data.food_name,
         food_image: foodImageUrl,
-        preparation_date_time: new Date(data.preparation_date_time).toISOString(),
+        preparation_date_time: new Date(
+          data.preparation_date_time
+        ).toISOString(),
         expiry_date_time: new Date(data.expiry_date_time).toISOString(),
         food_type: data.food_type,
         serves: data.serves,
@@ -156,7 +155,8 @@ export default function DonatePage() {
       router.push("/donor-dashboard");
     } catch (error: any) {
       toast("Error Creating Donation", {
-        description: error.message || "Could not create your donation. Please try again.",
+        description:
+          error.message || "Could not create your donation. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -197,6 +197,7 @@ export default function DonatePage() {
                         />
                       </FormControl>
                       <FormMessage />
+                      {/* <Volume2 size={20} /> */}
                     </FormItem>
                   )}
                 />
@@ -208,7 +209,11 @@ export default function DonatePage() {
                     <FormItem>
                       <FormLabel>Food Image</FormLabel>
                       <FormControl>
-                        <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files?.[0])} />
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => onChange(e.target.files?.[0])}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

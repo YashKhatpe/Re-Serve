@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { NgoOrderDetails } from '@/components/order/ngo-order-details'
-
+import { useAuth } from "@/context/auth-context"
 type Orders = {
     id: string;
     serves: number;
@@ -18,56 +18,62 @@ type Orders = {
 };
 
 export default function OrderDetailsPage() {
-    const [userType, setUserType] = useState<"donor" | "ngo" | null>(null);
+    // const [userType, setUserType] = useState<"donor" | "ngo" | null>(null);
     const [filter, setFilter] = useState<string>("ALL");
     const [orders, setOrders] = useState<Orders[]>([]);
     const [filteredOrders, setFilteredOrders] = useState<Orders[]>([]);
     const router = useRouter();
-
+    const { userType, loading, session, user } =  useAuth();
     
-  useEffect(() => {
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-        setUserType(null);
-        return;
-      }
-      const { data: donorData } = await supabase.from("donor").select("id").eq("id", user.id).single();
-      setUserType(donorData ? "donor" : "ngo");
-    }
-    checkAuth();
-  }, [router]);
-
-
-    useEffect(() => {
-        const fetchOrders = async () => {
-            const { data, error } = await supabase
-                .from("orders")
-                .select(`
-                    id, 
-                    donor_form_id, 
-                    ngo_id, 
-                    serves, 
-                    otp, 
-                    created_at, 
-                    delivery_person_name, 
-                    delivery_person_phone_no, 
-                    delivery_status
-                `);
-
-            if (error) {
-                console.error("Error fetching orders:", error);
+//   useEffect(() => {
+    //   async function checkAuth() {
+        //   const { data: { user } } = await supabase.auth.getUser();
+        //   if (!user) {
+            //     router.push("/login");
+            //     return;
+            //   }
+            //   const { data: donorData } = await supabase.from("donor").select("id").eq("id", user.id).single();
+            //   setUserType(donorData ? "donor" : "ngo");
+            // }
+            // checkAuth();
+        // }, [router]);
+        
+        
+        useEffect(() => {
+            if (loading) return; // Wait until auth check is complete
+        
+            if (!user) {
+                router.push("/login");
                 return;
             }
-
-            console.log("Fetched Orders:", data);
-            setOrders(data);
-            setFilteredOrders(data);
-        };
-
-        fetchOrders();
-    }, []);
+        
+            const fetchOrders = async () => {
+                const { data, error } = await supabase
+                    .from("orders")
+                    .select(`
+                        id, 
+                        donor_form_id, 
+                        ngo_id, 
+                        serves, 
+                        otp, 
+                        created_at, 
+                        delivery_person_name, 
+                        delivery_person_phone_no, 
+                        delivery_status
+                    `);
+        
+                if (error) {
+                    console.error("Error fetching orders:", error);
+                    return;
+                }
+        
+                console.log("Fetched Orders:", data);
+                setOrders(data);
+                setFilteredOrders(data);
+            };
+        
+            fetchOrders();
+        }, [loading, user]); // Add `loading` and `user` as dependencies
 
     const handleStatusChange = (orderId: string, newStatus: "delivering" | "delivered") => {
         setOrders((prevOrders) =>
