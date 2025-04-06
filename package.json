@@ -38,7 +38,6 @@
         "react-day-picker": "^9.6.4",
         "react-dom": "^19.0.0",
         "react-hook-form": "^7.54.2",
-        "react-slider": "^2.0.6",
         "recharts": "^2.15.1",
         "reserve": "file:",
         "sonner": "^2.0.2",
