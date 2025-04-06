@@ -34,7 +34,6 @@ type NGO = {
   name: string;
   address_map_link: string;
   reg_no?: string;
-  registration_number?: string;
   food_preference: string;
 };
 
@@ -99,7 +98,6 @@ export async function GET(request: Request) {
           name,
           address_map_link,
           reg_no,
-          registration_number,
           food_preference
         ),
         delivery_person_name,
@@ -149,11 +147,6 @@ export async function GET(request: Request) {
     const orders = data as unknown as Order[];
 
     // Fix schema differences for all orders
-    orders.forEach((order) => {
-      if (order.ngo && !order.ngo.reg_no && order.ngo.registration_number) {
-        order.ngo.reg_no = order.ngo.registration_number;
-      }
-    });
 
     // Track the orders included in this batch
     const orderIds = orders.map((order) => order.id);
