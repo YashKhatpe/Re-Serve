@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/lib/supabase";
 import { toast } from 'sonner';
+
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
   password: z.string().min(1, { message: "Password is required." }),
@@ -20,6 +21,7 @@ const loginFormSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false); // Loader state
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -39,32 +41,37 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      toast("Login Successful",{
+      toast("Login Successful", {
         description: "You are now logged in.",
       });
 
-      // Check if user is donor or NGO and redirect accordingly
-      const { data: donorData } = await supabase
-        .from('donor')
-        .select('id')
-        .eq('email', data.email)
-        .single();
+      // Delay redirection slightly and show loader
+      setIsRedirecting(true); // Show loader
 
-      if (donorData) {
-        router.push('/donor-dashboard');
-      } else {
-        const { data: ngoData } = await supabase
-          .from('ngo')
+      setTimeout(async () => {
+        // Check if user is donor or NGO and redirect accordingly
+        const { data: donorData } = await supabase
+          .from('donor')
           .select('id')
           .eq('email', data.email)
           .single();
 
-        if (ngoData) {
-          router.push('/ngo/dashboard');
+        if (donorData) {
+          router.push('/donor-dashboard');
         } else {
-          router.push('/');
+          const { data: ngoData } = await supabase
+            .from('ngo')
+            .select('id')
+            .eq('email', data.email)
+            .single();
+
+          if (ngoData) {
+            router.push('/ngo/dashboard');
+          } else {
+            router.push('/');
+          }
         }
-      }
+      }, 1500); // 1.5 sec delay before redirect
     } catch (error: any) {
       toast("Login Failed", {
         description: error.message || "Invalid email or password.",
@@ -75,89 +82,107 @@ export default function LoginPage() {
   }
 
   return (
+    <>
+      {/* Full-screen Loader */}
+      {isRedirecting && (
+        <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50 space-y-6 text-center px-4">
+          <Image
+            src="/navlogo.png" // replace with your icon (same as in your screenshot)
+            alt="Login Illustration"
+            width={64}
+            height={64}
+          />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Logging you in...</h2>
+            <p className="text-gray-600">Please wait while we log you into your dashboard.</p>
+          </div>
+          <div className="h-6 w-6 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
 
-    <div className="min-h-screen bg-stone-50 flex flex-col">
 
-      {/* Main content */}
-      <main className="flex-1 flex items-center justify-center p-6">
-        <div className="flex flex-col md:flex-row gap-8 items-center justify-center max-w-4xl w-full">
-          <div className="w-full md:w-1/2 hidden md:block">
-            <div className="relative h-[400px] w-full rounded-lg overflow-hidden shadow-lg">
-              <Image 
-                src="/login.png" 
-                alt="Food donation" 
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-                <h2 className="text-white text-2xl font-bold">Making a difference, one donation at a time</h2>
+
+      <div className="min-h-screen bg-stone-50 flex flex-col">
+        {/* Main content */}
+        <main className="flex-1 flex items-center justify-center p-6">
+          <div className="flex flex-col md:flex-row gap-8 items-center justify-center max-w-4xl w-full">
+            <div className="w-full md:w-1/2 hidden md:block">
+              <div className="relative h-[400px] w-full rounded-lg overflow-hidden shadow-lg">
+                <Image
+                  src="/login.png"
+                  alt="Food donation"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+                  <h2 className="text-white text-2xl font-bold">Making a difference, one donation at a time</h2>
+                </div>
               </div>
             </div>
+
+            <div className="w-full md:w-1/2">
+              <Card className="border shadow-md">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+                  <CardDescription>
+                    Sign in to your account to continue your mission
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter your email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Enter your password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Signing in..." : "Sign In"}
+                      </Button>
+                    </form>
+                  </Form>
+
+                  <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-600">
+                      Don't have an account?{" "}
+                      <Link href="/register" className="text-emerald-600 font-medium hover:underline">
+                        Register here
+                      </Link>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-          
-          <div className="w-full md:w-1/2">
-            <Card className="border shadow-md">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-                <CardDescription>
-                  Sign in to your account to continue your mission
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter your email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Enter your password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-emerald-600 hover:bg-emerald-700"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Signing in..." : "Sign In"}
-                    </Button>
-                  </form>
-                </Form>
-                
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-gray-600">
-                    Don't have an account?{" "}
-                    <Link href="/register" className="text-emerald-600 font-medium hover:underline">
-                      Register here
-                    </Link>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }
