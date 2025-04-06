@@ -6,7 +6,6 @@ const client = new SpeechClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 // import { SpeechClient } from "@google-cloud/speech";
-import { NextRequest, NextResponse } from "next/server";
 // import credentials from "@/nimbus.json";
 // import path from "path";
 import axios from "axios";
