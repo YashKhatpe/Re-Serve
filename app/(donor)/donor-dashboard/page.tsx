@@ -32,7 +32,7 @@ export default function Home() {
       // Format dates for API call: YYYY-MM-DD
       const formattedStartDate = format(startDate, "yyyy-MM-dd");
       const formattedEndDate = format(endDate, "yyyy-MM-dd");
-      
+
       // Open in new tab to download ZIP file
       window.open(
         `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
@@ -46,25 +46,39 @@ export default function Home() {
   };
 
   // Generate Last Month's Receipts (Quick Access)
-  const handleGenerateLastMonth = () => {
+  const handleGenerateLastMonth = async () => {
     setLoading(true);
     try {
       const today = new Date();
       const lastMonth = new Date();
       lastMonth.setMonth(today.getMonth() - 1);
-      
-      // Format to YYYY-MM-DD
-      const formattedStartDate = format(new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1), "yyyy-MM-dd");
-      const formattedEndDate = format(new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0), "yyyy-MM-dd");
-      
-      window.open(
-        `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
-        '_blank'
+
+      const formattedStartDate = format(
+        new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1),
+        "yyyy-MM-dd"
       );
+      const formattedEndDate = format(
+        new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0),
+        "yyyy-MM-dd"
+      );
+
+      const previewUrl = `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
+
+      // Fetch first to check response
+      const response = await fetch(previewUrl);
+
+      if (response.status === 200) {
+        window.open(previewUrl, "_blank");
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Failed to generate receipts.");
+      }
     } catch (error) {
       console.error("Error generating receipts:", error);
+      alert("Something went wrong.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -86,10 +100,10 @@ export default function Home() {
                     Donate
                   </Button>
                 </Link>
-                <Button 
+                <Button
                   onClick={handleGenerateLastMonth}
-                  variant="outline" 
-                  size="sm" 
+                  variant="outline"
+                  size="sm"
                   className="gap-2"
                 >
                   <FileText className="h-4 w-4" />
@@ -99,32 +113,32 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatsCard 
-                icon={<DollarSign className="h-5 w-5 text-white" />} 
+              <StatsCard
+                icon={<DollarSign className="h-5 w-5 text-white" />}
                 iconBg="bg-red-400"
                 title="Total Today's Donation"
                 value="Rs. 1000"
                 change="+4.5% "
                 trend="up"
               />
-              <StatsCard 
-                icon={<ShoppingCart className="h-5 w-5 text-white" />} 
+              <StatsCard
+                icon={<ShoppingCart className="h-5 w-5 text-white" />}
                 iconBg="bg-yellow-400"
                 title="Total Donations"
                 value="300"
                 change="-1.5% "
                 trend="down"
               />
-              <StatsCard 
-                icon={<Package className="h-5 w-5 text-white" />} 
+              <StatsCard
+                icon={<Package className="h-5 w-5 text-white" />}
                 iconBg="bg-green-400"
                 title="Number of Donors"
                 value="5"
                 change="+2.5% "
                 trend="up"
               />
-              <StatsCard 
-                icon={<Users className="h-5 w-5 text-white" />} 
+              <StatsCard
+                icon={<Users className="h-5 w-5 text-white" />}
                 iconBg="bg-purple-400"
                 title="Number of people served"
                 value="350"
@@ -165,7 +179,7 @@ export default function Home() {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  
+
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium">End Date</label>
                     <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
@@ -191,8 +205,8 @@ export default function Home() {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  
-                  <Button 
+
+                  <Button
                     onClick={handleGenerateReceipts}
                     disabled={!startDate || !endDate || loading}
                     className="bg-blue-600 hover:bg-blue-700"
@@ -200,7 +214,7 @@ export default function Home() {
                     {loading ? "Generating..." : "Generate Receipts"}
                   </Button>
                 </div>
-                
+
                 <div className="mt-4 text-sm text-gray-500">
                   <p>Generate tax deduction receipts for food donations within a specific date range.</p>
                   <p className="mt-1 text-red-600 font-medium">Note: Once generated, receipts cannot be modified to prevent duplicate tax claims.</p>

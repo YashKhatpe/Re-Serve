@@ -280,6 +280,17 @@ export default function ProductDetailPage() {
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <Sprout className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Serves</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedDonation.serves}
+                    </p>
+                  </div>
+                </div>
+
               </div>
             </CardContent>
           </Card>
