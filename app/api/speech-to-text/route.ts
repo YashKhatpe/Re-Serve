@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       config: {
         enableAutomaticPunctuation: true,
         encoding: "LINEAR16",
-        languageCode: "en-IN",
+        languageCode: "en-US",
         model: "default",
       },
     };
