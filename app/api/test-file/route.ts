@@ -2,10 +2,8 @@
 import fs from "fs";
 import { NextResponse } from "next/server";
 import path from "path";
-import credentials from "@/nimbus.json";
 
 export async function GET() {
-  console.log("Credentials", credentials);
   console.log("EMAIL:", process.env.GOOGLE_CLIENT_EMAIL);
   console.log("PRIVATE KEY:", process.env.GOOGLE_PRIVATE_KEY);
   console.log(
