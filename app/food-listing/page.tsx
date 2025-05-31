@@ -41,13 +41,18 @@ export default function FoodListingPage() {
   const router = useRouter();
   const { setSelectedDonation } = useDonation();
 
-  const [filteredDonations, setFilteredDonations] = useState<Donation[] | []>([]);
+  const [filteredDonations, setFilteredDonations] = useState<Donation[] | []>(
+    []
+  );
   const [searchTerm, setSearchTerm] = useState("");
+  const [voiceQuery, setVoiceQuery] = useState("");
   const [maxDistance, setMaxDistance] = useState(50); // Default max distance in km
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<string[]>([]);
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-
 
   useEffect(() => {
     async function checkAuth() {
@@ -85,9 +90,14 @@ export default function FoodListingPage() {
             console.error("Error fetching NGO data:", ngoError.details);
           } else if (ngoData && ngoData.address_map_link) {
             // Extract coordinates from the map URL
-            const locationResult = extractLocationFromMapUrl(ngoData.address_map_link);
+            const locationResult = extractLocationFromMapUrl(
+              ngoData.address_map_link
+            );
             if (locationResult.location) {
-              console.log("Using NGO location from address_map_link:", locationResult.location);
+              console.log(
+                "Using NGO location from address_map_link:",
+                locationResult.location
+              );
               setUserLocation(locationResult.location);
               return; // Exit early as we've set the location
             }
@@ -104,21 +114,23 @@ export default function FoodListingPage() {
   useEffect(() => {
     async function fetchDonations() {
       let latLng = { lat: 0, lng: 0 };
-      const { data, error } = await supabase.from('donor_form').select('*');
+      const { data, error } = await supabase.from("donor_form").select("*");
       if (error) {
         console.error("Error fetching donations:", error);
       } else {
         const updatedDonations: Donation[] = [];
-        for(let donation of data){
+        for (let donation of data) {
           const { data: donorData, error: donorError } = await supabase
-          .from('donor')
-          .select('address_map_link')
-          .eq('id', donation.donor_id)
-          .single();
+            .from("donor")
+            .select("address_map_link")
+            .eq("id", donation.donor_id)
+            .single();
 
           if (donorData && donorData.address_map_link) {
             // Extract coordinates from the map URL
-            const locationResult = extractLocationFromMapUrl(donorData.address_map_link);
+            const locationResult = extractLocationFromMapUrl(
+              donorData.address_map_link
+            );
             if (locationResult.location) {
               latLng = locationResult.location;
             }
@@ -138,7 +150,7 @@ export default function FoodListingPage() {
           const updatedDonation: Donation = {
             ...donation,
             location: latLng,
-            distance: distance
+            distance: distance,
           };
           updatedDonations.push(updatedDonation);
         }
@@ -147,8 +159,10 @@ export default function FoodListingPage() {
         updatedDonations.sort((a, b) => a.distance - b.distance);
 
         // Log unique food types for debugging
-        const uniqueFoodTypes = [...new Set(updatedDonations.map(d => d.food_type))];
-        console.log('Available food types:', uniqueFoodTypes);
+        const uniqueFoodTypes = [
+          ...new Set(updatedDonations.map((d) => d.food_type)),
+        ];
+        console.log("Available food types:", uniqueFoodTypes);
 
         setDonations(updatedDonations);
         setFilteredDonations(updatedDonations);
@@ -166,27 +180,34 @@ export default function FoodListingPage() {
     // Apply search term filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(donation =>
-        donation.food_name.toLowerCase().includes(term) ||
-        donation.food_type.toLowerCase().includes(term)
+      filtered = filtered.filter(
+        (donation) =>
+          donation.food_name.toLowerCase().includes(term) ||
+          donation.food_type.toLowerCase().includes(term)
       );
     }
 
     // Apply food type filter
     if (selectedFoodTypes.length > 0) {
-      filtered = filtered.filter(donation =>
+      filtered = filtered.filter((donation) =>
         selectedFoodTypes.includes(donation.food_type)
       );
     }
 
     // Apply distance filter
     if (userLocation) {
-      filtered = filtered.filter(donation => donation.distance <= maxDistance);
+      filtered = filtered.filter(
+        (donation) => donation.distance <= maxDistance
+      );
     }
 
     setFilteredDonations(filtered);
-    console.log('Filtered donations:', filtered.length);
-    console.log('Filter criteria:', { searchTerm, selectedFoodTypes, maxDistance });
+    console.log("Filtered donations:", filtered.length);
+    console.log("Filter criteria:", {
+      searchTerm,
+      selectedFoodTypes,
+      maxDistance,
+    });
   }, [searchTerm, selectedFoodTypes, maxDistance, donations, userLocation]);
 
   const handleCardClick = (donation: Donation) => {
@@ -194,13 +215,10 @@ export default function FoodListingPage() {
     router.push("/products");
   };
   const toggleFoodType = (type: string) => {
-    setSelectedFoodTypes(prev =>
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
+    setSelectedFoodTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
   };
-
 
   const handleVoiceQuery = async () => {
     setUserQuery("");
@@ -356,7 +374,10 @@ export default function FoodListingPage() {
           audioChunksRef.current = [];
 
           //send to gemini
-          await sendTextToGemini(result.transcript);
+          const filters = await sendTextToGemini(result.transcript);
+          const data = await queryDonorForm(filters); // parsed from Gemini
+          setFilteredDonations(data);
+          console.log("Final Data: ", data);
         } else {
           setError("Error uploading audio to server");
         }
@@ -367,41 +388,113 @@ export default function FoodListingPage() {
     }
   };
 
+  async function queryDonorForm(filters: any[]) {
+    let query: any = supabase.from("donor_form").select("*");
+    console.log("Query", query);
+    filters.forEach((filter) => {
+      const { field, operator, value } = filter;
+
+      switch (operator) {
+        case "=":
+          query = query.eq(field, value);
+          break;
+        case ">":
+          query = query.gt(field, value);
+          break;
+        case ">=":
+          query = query.gte(field, value);
+          break;
+        case "<":
+          query = query.lt(field, value);
+          break;
+        case "<=":
+          query = query.lte(field, value);
+          break;
+        case "!=":
+          query = query.neq(field, value);
+          break;
+        case "like":
+          query = query.ilike(field, `%${value}%`);
+          break;
+        default:
+          console.warn(`Unsupported operator: ${operator}`);
+      }
+    });
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Supabase query error:", error.message);
+    } else {
+      console.log("Query result:", data);
+    }
+
+    return data;
+  }
   const sendTextToGemini = async (text: string) => {
     try {
-      const API_URL = process.env.NEXT_GEMINI_API_URL || "";
+      const API_URL = process.env.NEXT_PUBLIC_GEMINI_API_URL || "";
+      const today = new Date().toLocaleDateString("en-GB"); // Format: "31/05/2025"
+
+      const prompt = `
+      Today's date is ${today}. Please use this when processing any date-related queries.
+  You are a helpful assistant. A user will provide a voice query related to food donations.
+  
+  Your ONLY task is to return a list of filters in this EXACT JSON format:
+  [
+    {
+      "field": "field_name",
+      "operator": "=", "<=", ">=", "like",
+      "value": "actual_value"
+    }
+  ]
+  
+  ⚠️ RULES:
+  - Use only these fields: food_name, food_type (veg, non-veg), serves, preparation_date_time, expiry_date_time, storage, preferred_pickup_time
+  - Dates like "today" or "tomorrow" must be calculated using Date.now() and returned in YYYY-MM-DD format.
+  - If a date is mentioned like tomorrow's then food expiring tomorrow or after that must be shown.
+  - Return only JSON. No markdown (\`\`\`), no explanation, no prefix text.
+  
+  Query: ${text}
+  `;
+      console.log("Api URL: ", API_URL);
       const response = await axios.post(API_URL, {
-        contents: [
-          {
-            parts: [
-              {
-                text:
-                  text +
-                  ' I have several parameters like food_name, serves (no of people that can eat the food), expiry date, food_type (veg, non-veg, jain). So I want you to return only a JS object in the below format { food_name: "actual_name", food_type: "actual_type", serves: "actual_serve", expiry_date: "actual_date", prep_data: "actual_date" } — if any of the parameters are missing then return null value for it and return the date in date format by calculating from Date.now(). So return only the JSON object for the above sentence and nothing else',
-              },
-            ],
-          },
-        ],
+        contents: [{ parts: [{ text: prompt }] }],
       });
 
-      let rawText =
-        response?.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const aiResponse =
+        response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      console.log(
+        "Gemini full response:",
+        JSON.stringify(response.data, null, 2)
+      );
 
-      // Remove markdown code block wrappers
-      rawText = rawText.replace(/```json|```/g, "").trim();
+      console.log("Gemini raw response:\n", aiResponse);
 
-      // Try extracting JSON using regex
-      const jsonMatch = rawText.match(/\{[\s\S]*?\}/); // Extracts first {...} block
-      if (!jsonMatch) throw new Error("No JSON found in Gemini response");
+      // Try to extract JSON between [ ... ]
+      let jsonText = "";
 
-      const parsedObject = JSON.parse(jsonMatch[0]);
-      console.log("Parsed Gemini Object:", parsedObject);
+      // Try to extract JSON inside backticks first (e.g., ```json\n[...]\n```)
+      const codeBlockMatch = aiResponse.match(
+        /```(?:json)?\s*([\s\S]*?)\s*```/
+      );
+      if (codeBlockMatch) {
+        jsonText = codeBlockMatch[1];
+      } else {
+        // Fallback: Try to extract raw JSON using brackets
+        const jsonMatch = aiResponse.match(/\[[\s\S]*?\]/);
+        if (jsonMatch) {
+          jsonText = jsonMatch[0];
+        }
+      }
 
-      // Show pretty JSON to user (or save to DB)
-      setUserQuery(JSON.stringify(parsedObject, null, 2));
+      if (!jsonText) {
+        throw new Error("JSON array not found in Gemini response.");
+      }
+      console.log("Final response: ", JSON.parse(jsonText));
+      return JSON.parse(jsonText);
     } catch (error: any) {
-      console.error("Error in gemini response: ", error.message);
-      setError("Failed to process Gemini response.");
+      console.error("Error in Gemini response:", error.message);
+      return [];
     }
   };
 
@@ -430,12 +523,10 @@ export default function FoodListingPage() {
           <TabsContent value="list">
             <div className="flex justify-between">
               <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <h1 className="text-3xl font-bold mb-6 text-center">
-                Find Food Rescuers
-              </h1>
-
-            </div>
-
+                <h1 className="text-3xl font-bold mb-6 text-center">
+                  Find Food Rescuers
+                </h1>
+              </div>
 
               <Button onClick={handleVoiceQuery}>
                 Try our voice based query
@@ -544,17 +635,35 @@ export default function FoodListingPage() {
                       {[
                         ...FOOD_PREFERENCES,
                         // Add any food types from the data that aren't in FOOD_PREFERENCES
-                        ...Array.from(new Set(donations.map(d => d.food_type)))
-                          .filter(type => !FOOD_PREFERENCES.some(p => p.value === type))
-                          .map(type => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) }))
+                        ...Array.from(
+                          new Set(donations.map((d) => d.food_type))
+                        )
+                          .filter(
+                            (type) =>
+                              !FOOD_PREFERENCES.some((p) => p.value === type)
+                          )
+                          .map((type) => ({
+                            value: type,
+                            label: type.charAt(0).toUpperCase() + type.slice(1),
+                          })),
                       ].map((preference) => (
-                        <div key={preference.value} className="flex items-center space-x-2">
+                        <div
+                          key={preference.value}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={`filter-${preference.value}`}
-                            checked={selectedFoodTypes.includes(preference.value)}
-                            onCheckedChange={() => toggleFoodType(preference.value)}
+                            checked={selectedFoodTypes.includes(
+                              preference.value
+                            )}
+                            onCheckedChange={() =>
+                              toggleFoodType(preference.value)
+                            }
                           />
-                          <label htmlFor={`filter-${preference.value}`} className="text-sm cursor-pointer">
+                          <label
+                            htmlFor={`filter-${preference.value}`}
+                            className="text-sm cursor-pointer"
+                          >
                             {preference.label}
                           </label>
                         </div>
@@ -564,7 +673,9 @@ export default function FoodListingPage() {
 
                   {/* Distance Filter */}
                   <div>
-                    <h3 className="font-semibold mb-2">Maximum Distance: {maxDistance} km</h3>
+                    <h3 className="font-semibold mb-2">
+                      Maximum Distance: {maxDistance} km
+                    </h3>
                     <Slider
                       value={maxDistance}
                       min={1}
@@ -595,19 +706,32 @@ export default function FoodListingPage() {
               Showing {filteredDonations.length} of {donations.length} donations
             </p>
 
-
             {/* Food Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredDonations.length > 0 ? (
                 filteredDonations.map((donation) => (
-                  <div key={donation.id} className="bg-white shadow-lg rounded-xl overflow-hidden transform transition hover:scale-105 cursor-pointer" onClick={() => handleCardClick(donation)}>
+                  <div
+                    key={donation.id}
+                    className="bg-white shadow-lg rounded-xl overflow-hidden transform transition hover:scale-105 cursor-pointer"
+                    onClick={() => handleCardClick(donation)}
+                  >
                     <div className="w-full h-48 relative">
-                      <Image src={donation.food_image} alt={donation.food_name} fill className="object-cover" />
+                      <Image
+                        src={donation.food_image}
+                        alt={donation.food_name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                     <div className="p-5">
-                      <h2 className="text-xl font-bold text-gray-900">{donation.food_name}</h2>
+                      <h2 className="text-xl font-bold text-gray-900">
+                        {donation.food_name}
+                      </h2>
                       <p className="text-emerald-600">{donation.food_type}</p>
-                      <p className="text-gray-600">Expires in {new Date(donation.expiry_date_time).toLocaleString()}</p>
+                      <p className="text-gray-600">
+                        Expires in{" "}
+                        {new Date(donation.expiry_date_time).toLocaleString()}
+                      </p>
                       {donation.distance > 0 && (
                         <div className="flex items-center mt-2 text-gray-500">
                           <MapPin size={16} className="mr-1" />
@@ -619,7 +743,10 @@ export default function FoodListingPage() {
                 ))
               ) : (
                 <div className="col-span-3 text-center py-10">
-                  <p className="text-gray-500">No donations match your filters. Try adjusting your search criteria.</p>
+                  <p className="text-gray-500">
+                    No donations match your filters. Try adjusting your search
+                    criteria.
+                  </p>
                 </div>
               )}
             </div>

@@ -7,13 +7,25 @@ import { Sidebar } from "@/components/sidebar";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { TotalRevenue } from "@/components/dashboard/total-revenue";
 import { VisitorInsights } from "@/components/dashboard/visitor-insights";
-import { DollarSign, ShoppingCart, Package, Users, Download, FileText, Calendar } from "lucide-react";
+import {
+  DollarSign,
+  ShoppingCart,
+  Package,
+  Users,
+  Download,
+  FileText,
+  Calendar,
+} from "lucide-react";
 import Link from "next/link";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calender";
 import { format } from "date-fns";
 
-export default function Home() {
+export default function DonorDashboard() {
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -36,7 +48,7 @@ export default function Home() {
       // Open in new tab to download ZIP file
       window.open(
         `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
-        '_blank'
+        "_blank"
       );
     } catch (error) {
       console.error("Error generating receipts:", error);
@@ -96,7 +108,10 @@ export default function Home() {
               </div>
               <div className="flex gap-3">
                 <Link href="/donate">
-                  <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+                  <Button
+                    variant="default"
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
                     Donate
                   </Button>
                 </Link>
@@ -150,13 +165,18 @@ export default function Home() {
             {/* Tax Receipt Generator Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-medium">Generate Tax Deduction Receipts</CardTitle>
+                <CardTitle className="text-lg font-medium">
+                  Generate Tax Deduction Receipts
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-4 items-end">
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium">Start Date</label>
-                    <Popover open={openStartDate} onOpenChange={setOpenStartDate}>
+                    <Popover
+                      open={openStartDate}
+                      onOpenChange={setOpenStartDate}
+                    >
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -216,8 +236,14 @@ export default function Home() {
                 </div>
 
                 <div className="mt-4 text-sm text-gray-500">
-                  <p>Generate tax deduction receipts for food donations within a specific date range.</p>
-                  <p className="mt-1 text-red-600 font-medium">Note: Once generated, receipts cannot be modified to prevent duplicate tax claims.</p>
+                  <p>
+                    Generate tax deduction receipts for food donations within a
+                    specific date range.
+                  </p>
+                  <p className="mt-1 text-red-600 font-medium">
+                    Note: Once generated, receipts cannot be modified to prevent
+                    duplicate tax claims.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -226,7 +252,6 @@ export default function Home() {
               <TotalRevenue />
               <VisitorInsights />
             </div>
-
           </div>
         </main>
       </div>
