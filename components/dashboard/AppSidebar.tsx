@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   Sidebar,
   SidebarContent,
@@ -9,27 +8,35 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Receipt, ShoppingCart } from "lucide-react";
+import { LayoutDashboard, Receipt, ShoppingCart, Building } from "lucide-react";
 
 const items = [
   {
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+    componentId: "dashboard",
   },
   {
     title: "Generate Receipt",
     url: "/generate-receipt",
     icon: Receipt,
+    componentId: "generate-receipt",
   },
   {
     title: "Orders",
     url: "/orders",
     icon: ShoppingCart,
+    componentId: "orders",
   },
 ];
 
-export function AppSidebar() {
+
+interface AppSidebarProps {
+  setActiveComponent: (component: string) => void;
+  userType: "donor" | "ngo" | null;
+}
+export function AppSidebar({ setActiveComponent, userType }: AppSidebarProps) {
   return (
     <Sidebar className="border-r border-orange-100">
       <SidebarContent>
@@ -45,12 +52,10 @@ export function AppSidebar() {
                     asChild
                     className="text-gray-700 hover:bg-orange-50 hover:text-orange-600 data-[active=true]:bg-orange-100 data-[active=true]:text-orange-600 text-base h-12"
                   >
-                    <Link href={item.url} legacyBehavior>
-                      <a>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.title}</span>
-                      </a>
-                    </Link>
+                    <button onClick={() => setActiveComponent(item.componentId)}>
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.title}</span>
+                    </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

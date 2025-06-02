@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+"use client";
+import React, { useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { VisitorInsights } from "@/components/dashboard/visitor-insights";
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 export default function NgoDashboard() {
   return (

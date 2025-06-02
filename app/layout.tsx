@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { DonationProvider } from "@/context/donation-context";
 import { AuthProvider } from '@/context/auth-context'
+import { SidebarProvider } from "@/components/ui/sidebar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -28,7 +29,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <DonationProvider>{children}</DonationProvider>
+            <DonationProvider>
+              <SidebarProvider>
+                {children}
+
+              </SidebarProvider>
+            </DonationProvider>
             <Toaster />
           </ThemeProvider>
         </AuthProvider>

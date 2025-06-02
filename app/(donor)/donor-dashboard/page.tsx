@@ -95,51 +95,48 @@ export default function DonorDashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="w-64 flex-shrink-0">
-        <Sidebar />
+    // <div className="flex bg-gray-50">
+      
+    //   <div className="flex-1 flex flex-col overflow-hidden">
+    //     <main className="flex-1 overflow-y-auto p-6">
+    <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6 }}
+    className="space-y-6"
+  >
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="flex justify-between items-center"
+    >
+      <div>
+        <h2 className="text-lg font-medium text-orange-600">
+          Today's Sales
+        </h2>
+        <p className="text-sm text-gray-500">Sales summary</p>
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-6"
+      <div className="flex gap-3">
+        <Link href="/donate">
+          <Button
+            variant="default"
+            className="bg-orange-500 hover:bg-orange-600"
           >
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="flex justify-between items-center"
-            >
-              <div>
-                <h2 className="text-lg font-medium text-orange-600">
-                  Today's Sales
-                </h2>
-                <p className="text-sm text-gray-500">Sales summary</p>
-              </div>
-              <div className="flex gap-3">
-                <Link href="/donate">
-                  <Button
-                    variant="default"
-                    className="bg-orange-500 hover:bg-orange-600"
-                  >
-                    Donate
-                  </Button>
-                </Link>
-                <Button
-                  onClick={handleGenerateLastMonth}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
-                >
-                  <FileText className="h-4 w-4" />
-                  {loading ? "Generating..." : "Last Month's Receipts"}
-                </Button>
-              </div>
-            </motion.div>
-
+            Donate
+          </Button>
+        </Link>
+        <Button
+          onClick={handleGenerateLastMonth}
+          variant="outline"
+          size="sm"
+          className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+        >
+          <FileText className="h-4 w-4" />
+          {loading ? "Generating..." : "Last Month's Receipts"}
+        </Button>
+      </div>
+    </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -271,8 +268,8 @@ export default function DonorDashboard() {
               <VisitorInsights />
             </motion.div>
           </motion.div>
-        </main>
-      </div>
-    </div>
+        // </main>
+    //   </div>
+    // </div>
   );
 }
