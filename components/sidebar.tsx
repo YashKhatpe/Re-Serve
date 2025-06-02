@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  BarChart2, 
-  ShoppingCart, 
-  Package, 
-  FileBarChart, 
-  MessageSquare, 
-  Settings, 
-  LogOut 
+import {
+  LayoutDashboard,
+  BarChart2,
+  ShoppingCart,
+  Package,
+  FileBarChart,
+  MessageSquare,
+  Settings,
+  LogOut,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -40,11 +40,7 @@ export function Sidebar() {
     <div className="flex h-screen flex-col bg-white border-r">
       <div className="flex h-14 items-center border-b px-4">
         <div className="flex items-center gap-2">
-          <Image
-            src="/navlogo.png"
-            width={50}
-            height={50}
-            alt="ReServe"/>
+          <Image src="/navlogo.png" width={50} height={50} alt="ReServe" />
           <span className="font-bold text-lg">ReServe</span>
         </div>
       </div>
