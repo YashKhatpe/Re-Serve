@@ -1,71 +1,78 @@
 "use client";
-
-import Image from "next/image";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 
 export function Navbar() {
   const { userType, loading } = useAuth();
-  // console.log("User Type is : ", userType)
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {/* <Heart className="h-5 w-5" /> */}
-          <Image
-            src="/navlogo.png"
-            alt="Food donation"
-            width={50}
-            height={50}
-            className=""
-            priority
-          />
-          <span className="font-bold text-lg">ReServe</span>
+    <nav className="w-full absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6 md:p-8">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex items-center space-x-2"
+      >
+        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-lg">R</span>
         </div>
-        <nav className="hidden md:flex items-center gap-6">
-          <a href="#how-it-works" className="text-lg font-medium">
-            How it works
-          </a>
-          <a href="#impact" className="text-lg font-medium">
-            Impact
-          </a>
-          <a href="#benefits" className="text-lg font-medium">
-            Benefits
-          </a>
-        </nav>
-
-        <div className="flex items-center gap-2">
+        <span className="text-2xl font-bold text-gray-800">Re-Serve</span>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="hidden md:flex items-center space-x-8"
+      >
+        <a
+          href="#home"
+          className="text-gray-700 hover:text-orange-500 transition-colors"
+        >
+          Home
+        </a>
+        <a
+          href="#how-it-works"
+          className="text-gray-700 hover:text-orange-500 transition-colors"
+        >
+          How It Works
+        </a>
+        <a
+          href="#features"
+          className="text-gray-700 hover:text-orange-500 transition-colors"
+        >
+          Features
+        </a>
+        <a
+          href="#about"
+          className="text-gray-700 hover:text-orange-500 transition-colors"
+        >
+          About Us
+        </a>
+        <div className="flex items-center space-x-2">
           {!loading && (
             <>
               {userType === "donor" && (
                 <Link href="/donate">
-                  <Button
-                    variant="default"
-                    className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
-                  >
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full font-semibold">
                     Donate
                   </Button>
                 </Link>
               )}
               {userType === "ngo" && (
                 <Link href="/food-listing">
-                  <Button
-                    variant="default"
-                    className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
-                  >
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full font-semibold">
                     Request Food
                   </Button>
                 </Link>
               )}
-
               {!userType ? (
                 <>
                   <Link href="/register">
                     <Button
                       variant="outline"
-                      className="bg-stone-100 hover:bg-stone-200 cursor-pointer"
+                      className="border-orange-500 text-orange-500 hover:bg-orange-50 px-6 py-2 rounded-full font-semibold"
                     >
                       Sign up
                     </Button>
@@ -73,7 +80,7 @@ export function Navbar() {
                   <Link href="/login">
                     <Button
                       variant="outline"
-                      className="bg-stone-100 hover:bg-stone-200 cursor-pointer"
+                      className="border-orange-500 text-orange-500 hover:bg-orange-50 px-6 py-2 rounded-full font-semibold"
                     >
                       Log In
                     </Button>
@@ -83,7 +90,7 @@ export function Navbar() {
                 <Link href="/sign-out">
                   <Button
                     variant="outline"
-                    className="bg-stone-100 hover:bg-stone-200 cursor-pointer"
+                    className="border-orange-500 text-orange-500 hover:bg-orange-50 px-6 py-2 rounded-full font-semibold"
                   >
                     Sign Out
                   </Button>
@@ -93,7 +100,7 @@ export function Navbar() {
                 <Link href="/dashboard">
                   <Button
                     variant="outline"
-                    className="bg-stone-100 hover:bg-stone-200 cursor-pointer"
+                    className="border-orange-500 text-orange-500 hover:bg-orange-50 px-6 py-2 rounded-full font-semibold"
                   >
                     Dashboard
                   </Button>
@@ -102,7 +109,7 @@ export function Navbar() {
             </>
           )}
         </div>
-      </div>
-    </header>
+      </motion.div>
+    </nav>
   );
 }
