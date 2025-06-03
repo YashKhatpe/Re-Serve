@@ -8,7 +8,7 @@ export function DashNavbar() {
   const { userType, loading } = useAuth();
 
   return (
-    <nav className="w-full absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6">
+    <nav className="w-full top-0 left-0 right-0 z-20 flex items-center justify-between p-6">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -26,30 +26,30 @@ export function DashNavbar() {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="hidden md:flex items-center space-x-8"
       >
-        <a
-          href="#home"
+        <Link
+          href="/"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           Home
-        </a>
-        <a
+        </Link>
+        <Link
           href="#how-it-works"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           How It Works
-        </a>
-        <a
+        </Link>
+        <Link
           href="#features"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           Features
-        </a>
-        <a
+        </Link>
+        <Link
           href="#about"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           About Us
-        </a>
+        </Link>
         <div className="flex items-center space-x-2">
           {!loading && (
             <>

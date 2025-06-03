@@ -24,8 +24,10 @@ export default function Dashboard() {
   );
 
   return (
-    <>
-      {/* <DashNavbar /> */}
+    <div className="bg-gray-50">
+      <div className="bg-gray-50">
+        <DashNavbar />
+      </div>
       <div className="flex h-screen overflow-hidden">
         <SidebarProvider>
           <AppSidebar
@@ -49,6 +51,6 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 }
