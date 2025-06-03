@@ -5,6 +5,7 @@ export const runtime = "nodejs";
 // import PDFDocument from "pdfkit";
 import { supabase } from "@/lib/supabase";
 import JSZip from "jszip";
+import puppeteer from "puppeteer";
 
 // Initialize Supabase client with error handling
 // const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -170,12 +171,14 @@ export async function GET(request: Request) {
     // Create a zip file to store all text receipts
     const zip = new JSZip();
 
-    // Generate text receipts for each order
-    console.log("Starting receipt generation for all orders...");
+    // Launch Puppeteer browser once for all receipts
+    const browser = await puppeteer.launch({
+      headless: "new", // or true for latest puppeteer
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
 
     try {
-      // Add a simple HTML receipt for each order
-      orders.forEach((order) => {
+      for (const order of orders) {
         try {
           console.log(`Generating receipt for order ${order.id}`);
 
@@ -299,10 +302,16 @@ export async function GET(request: Request) {
           </html>
           `;
 
-          // Add to zip file
-          const fileName = `donation_receipt_${receiptNumber}.html`;
-          zip.file(fileName, htmlReceipt);
-          console.log(`Added HTML receipt to zip file: ${fileName}`);
+          // Convert HTML to PDF using Puppeteer
+          const page = await browser.newPage();
+          await page.setContent(htmlReceipt, { waitUntil: "networkidle0" });
+          const pdfBuffer = await page.pdf({ format: "A4" });
+          await page.close();
+
+          // Add PDF to zip
+          const fileName = `donation_receipt_${receiptNumber}.pdf`;
+          zip.file(fileName, pdfBuffer);
+          console.log(`Added PDF receipt to zip file: ${fileName}`);
         } catch (err) {
           console.error(`Error generating receipt for order ${order.id}:`, err);
           if (err instanceof Error) {
@@ -313,7 +322,7 @@ export async function GET(request: Request) {
             });
           }
         }
-      });
+      }
 
       // Log zip file contents before generating
       console.log(
@@ -392,19 +401,8 @@ export async function GET(request: Request) {
           "Content-Disposition": `attachment; filename=donation_receipts_${formattedStartDate}_to_${formattedEndDate}.zip`,
         },
       });
-    } catch (zipError) {
-      console.error("Error creating zip file:", zipError);
-      return new Response(
-        JSON.stringify({
-          error: "Failed to create zip file",
-          details:
-            zipError instanceof Error ? zipError.message : String(zipError),
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    } finally {
+      await browser.close();
     }
   } catch (error: any) {
     console.error("Unexpected error in batch receipt generation:", error);

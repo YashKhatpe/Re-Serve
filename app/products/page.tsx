@@ -22,6 +22,23 @@ import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { Volume2 } from "lucide-react";
 import axios from "axios";
+
+// Define the type for the food safety API response
+interface FoodSafetyInfo {
+  food_name: string;
+  food_category: string;
+  ingredients: string[];
+  high_risk: boolean;
+  safety_status: string;
+  safety_message: string;
+  danger_zone_hours: number;
+  shelf_life: Record<string, number>;
+  recommended_storage: string;
+  safety_guidelines: string[];
+  remaining_hours: number;
+  hours_before_unsafe: number;
+}
+
 export default function ProductDetailPage() {
   const { selectedDonation } = useDonation();
   const [isOpen, setIsOpen] = useState(false);
@@ -30,13 +47,125 @@ export default function ProductDetailPage() {
   const [delivery_person_name, setDeliveryPersonName] = useState("");
   const [delivery_person_phone_no, setDeliveryPersonPhoneNo] = useState("");
 
+  // Food Safety API integration
+  const [foodSafetyInfo, setFoodSafetyInfo] = useState<FoodSafetyInfo | null>(
+    null
+  );
+  const [loadingSafety, setLoadingSafety] = useState(true);
+  const [safetyError, setSafetyError] = useState("");
+  const [expiryCountdown, setExpiryCountdown] = useState<string>("");
+  const [isExpired, setIsExpired] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
     if (!selectedDonation) {
       router.push("/food-listing");
+      return;
     }
+    // Calculate hours since preparation
+    const prepTime = new Date(selectedDonation.preparation_date_time);
+    const now = new Date();
+    const hoursSincePrepared = Math.floor(
+      (now.getTime() - prepTime.getTime()) / (1000 * 60 * 60)
+    );
+
+    // Map storage type to API expected values
+    const storageTypeMap: Record<string, string> = {
+      room_temp: "Room Temp",
+      "Room Temp": "Room Temp",
+      refrigerated: "Refrigerated",
+      fridge: "Refrigerated",
+      Refrigerated: "Refrigerated",
+      frozen: "Frozen",
+      freezer: "Frozen",
+      Frozen: "Frozen",
+    };
+    const apiStorageType =
+      storageTypeMap[selectedDonation.storage] || selectedDonation.storage;
+
+    const apiPayload = {
+      foodName: selectedDonation.food_name,
+      storageType: apiStorageType,
+      hoursSincePrepared,
+    };
+    console.log("Sending to Food Safety API:", apiPayload);
+    setLoadingSafety(true);
+    setSafetyError("");
+    fetch("https://expiry-prediction.onrender.com/api/food-safety", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(apiPayload),
+    })
+      .then(async (res) => {
+        const text = await res.text();
+        console.log("API response status:", res.status);
+        console.log("API response text:", text);
+        if (!res.ok) throw new Error(text);
+        return JSON.parse(text);
+      })
+      .then((data) => setFoodSafetyInfo(data))
+      .catch((err) => {
+        setFoodSafetyInfo(null);
+        setSafetyError("Could not fetch food safety info. " + err.message);
+        console.error("Food Safety API error:", err);
+      })
+      .finally(() => setLoadingSafety(false));
   }, [selectedDonation, router]);
+
+  // Real-time countdown for expiry
+  useEffect(() => {
+    if (!selectedDonation) return;
+    let interval: NodeJS.Timeout | undefined;
+    function updateCountdown() {
+      if (!selectedDonation) return;
+      const apiExpiry = getApiExpiryDate();
+      const now = new Date();
+      if (apiExpiry) {
+        const diffMs = apiExpiry.getTime() - now.getTime();
+        if (diffMs <= 0) {
+          setExpiryCountdown("Expired");
+          setIsExpired(true);
+        } else {
+          const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          let text = "";
+          if (diffHrs > 0) text += `${diffHrs} hour${diffHrs > 1 ? "s" : ""} `;
+          text += `${diffMin} minute${diffMin !== 1 ? "s" : ""} left to expire`;
+          setExpiryCountdown(text);
+          setIsExpired(false);
+        }
+      } else {
+        // fallback to DB expiry
+        const dbExpiry = selectedDonation?.expiry_date_time
+          ? new Date(selectedDonation.expiry_date_time)
+          : null;
+        if (!dbExpiry) {
+          setExpiryCountdown("");
+          setIsExpired(true);
+          return;
+        }
+        const diffMs = dbExpiry.getTime() - now.getTime();
+        if (diffMs <= 0) {
+          setExpiryCountdown("Expired");
+          setIsExpired(true);
+        } else {
+          const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          let text = "";
+          if (diffHrs > 0) text += `${diffHrs} hour${diffHrs > 1 ? "s" : ""} `;
+          text += `${diffMin} minute${diffMin !== 1 ? "s" : ""} left to expire`;
+          setExpiryCountdown(text);
+          setIsExpired(false);
+        }
+      }
+    }
+    updateCountdown();
+    interval = setInterval(updateCountdown, 60000); // update every minute
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [foodSafetyInfo, selectedDonation]);
 
   if (!selectedDonation) {
     return <div className="p-4">Loading...</div>;
@@ -175,6 +304,33 @@ export default function ProductDetailPage() {
     }
   };
 
+  // Helper to calculate expiry date from preparation date and shelf life hours
+  function getApiExpiryDate() {
+    if (!foodSafetyInfo || !selectedDonation?.preparation_date_time)
+      return null;
+    const prepTime = new Date(selectedDonation.preparation_date_time);
+    // Use the storage type sent to the API
+    const storageTypeMap: Record<string, string> = {
+      room_temp: "Room Temp",
+      "Room Temp": "Room Temp",
+      refrigerated: "Refrigerated",
+      fridge: "Refrigerated",
+      Refrigerated: "Refrigerated",
+      frozen: "Frozen",
+      freezer: "Frozen",
+      Frozen: "Frozen",
+    };
+    const apiStorageType =
+      storageTypeMap[selectedDonation?.storage ?? ""] ||
+      selectedDonation?.storage;
+    const shelfLifeHours = foodSafetyInfo.shelf_life?.[apiStorageType];
+    if (!shelfLifeHours) return null;
+    const expiryDate = new Date(
+      prepTime.getTime() + shelfLifeHours * 60 * 60 * 1000
+    );
+    return expiryDate;
+  }
+
   return (
     <>
       <Navbar />
@@ -261,12 +417,31 @@ export default function ProductDetailPage() {
                   <div>
                     <p className="font-medium">Expiry Date</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(
-                        selectedDonation.expiry_date_time
-                      ).toLocaleDateString()}{" "}
-                      {new Date(
-                        selectedDonation.expiry_date_time
-                      ).toLocaleTimeString()}
+                      {/* Use API expiry date if available, else fallback to DB */}
+                      {(() => {
+                        const apiExpiry = getApiExpiryDate();
+                        if (apiExpiry) {
+                          return (
+                            <>
+                              {apiExpiry.toLocaleDateString()}{" "}
+                              {apiExpiry.toLocaleTimeString()}
+                            </>
+                          );
+                        }
+                        return (
+                          <>
+                            {new Date(
+                              selectedDonation.expiry_date_time
+                            ).toLocaleDateString()}{" "}
+                            {new Date(
+                              selectedDonation.expiry_date_time
+                            ).toLocaleTimeString()}
+                          </>
+                        );
+                      })()}
+                    </p>
+                    <p className="text-xs text-red-600 font-semibold">
+                      {expiryCountdown}
                     </p>
                   </div>
                 </div>
@@ -291,22 +466,79 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
 
+                {/* Food Safety Info from API */}
+                <div className="col-span-2">
+                  <Separator />
+                  <h3 className="font-semibold mt-2">Food Safety Info</h3>
+                  {loadingSafety ? (
+                    <p>Loading food safety info...</p>
+                  ) : safetyError ? (
+                    <p className="text-red-500">{safetyError}</p>
+                  ) : foodSafetyInfo ? (
+                    <div className="space-y-1">
+                      <p>
+                        <strong>Status:</strong> {foodSafetyInfo.safety_status}
+                      </p>
+                      <p>
+                        <strong>Message:</strong>{" "}
+                        {foodSafetyInfo.safety_message}
+                      </p>
+                      <p>
+                        <strong>Recommended Storage:</strong>{" "}
+                        {foodSafetyInfo.recommended_storage}
+                      </p>
+                      <p>
+                        <strong>Hours before unsafe:</strong>{" "}
+                        <span className="text-red-600 font-semibold">
+                          {(() => {
+                            const apiExpiry = getApiExpiryDate();
+                            if (!apiExpiry) return 0;
+                            const now = new Date();
+                            const diffMs = apiExpiry.getTime() - now.getTime();
+                            if (diffMs <= 0) return 0;
+                            const diffHrs = Math.floor(
+                              diffMs / (1000 * 60 * 60)
+                            );
+                            return diffHrs;
+                          })()}
+                        </span>
+                      </p>
+                      {foodSafetyInfo.safety_guidelines && (
+                        <ul className="list-disc ml-5">
+                          {foodSafetyInfo.safety_guidelines.map(
+                            (g: string, i: number) => (
+                              <li key={i}>{g}</li>
+                            )
+                          )}
+                        </ul>
+                      )}
+                    </div>
+                  ) : (
+                    <p>No food safety info available.</p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="mt-8 flex items-center justify-center">
-          <Button
-            variant="default"
-            className="bg-emerald-600 hover:bg-emerald-700 p-6 cursor-pointer"
-            onClick={() => {
-              setIsOpen(true);
-              generateOTP();
-            }}
-          >
-            Request Food
-          </Button>
+          {isExpired ? (
+            <div className="text-red-600 font-semibold text-lg">
+              This food has expired and cannot be requested.
+            </div>
+          ) : (
+            <Button
+              variant="default"
+              className="bg-emerald-600 hover:bg-emerald-700 p-6 cursor-pointer"
+              onClick={() => {
+                setIsOpen(true);
+                generateOTP();
+              }}
+            >
+              Request Food
+            </Button>
+          )}
         </div>
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
