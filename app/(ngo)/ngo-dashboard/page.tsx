@@ -22,9 +22,9 @@ import { Button } from "@/components/ui/button";
 export default function NgoDashboard() {
   return (
     <div className="flex h-screen bg-gray-50">
-      <div className="w-64 flex-shrink-0">
+      {/* <div className="w-64 flex-shrink-0">
         <Sidebar />
-      </div>
+      </div> */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* <Header /> */}
         <main className="flex-1 overflow-y-auto p-6">
