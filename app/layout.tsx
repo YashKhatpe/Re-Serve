@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { DonationProvider } from "@/context/donation-context";
-import { AuthProvider } from '@/context/auth-context'
+import { AuthProvider } from "@/context/auth-context";
 import { SidebarProvider } from "@/components/ui/sidebar";
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,10 +30,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <DonationProvider>
-              <SidebarProvider>
-                {children}
-
-              </SidebarProvider>
+              {/* <SidebarProvider> */}
+              {children}
+              {/* </SidebarProvider> */}
             </DonationProvider>
             <Toaster />
           </ThemeProvider>

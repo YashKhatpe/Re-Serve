@@ -6,12 +6,25 @@ import Image from "next/image";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { supabase } from "@/lib/supabase";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -28,7 +41,7 @@ export default function LoginPage() {
     defaultValues: {
       email: "",
       password: "",
-    }
+    },
   });
 
   async function onSubmit(data: z.infer<typeof loginFormSchema>) {
@@ -51,24 +64,24 @@ export default function LoginPage() {
       setTimeout(async () => {
         // Check if user is donor or NGO and redirect accordingly
         const { data: donorData } = await supabase
-          .from('donor')
-          .select('id')
-          .eq('email', data.email)
+          .from("donor")
+          .select("id")
+          .eq("email", data.email)
           .single();
 
         if (donorData) {
-          router.push('/donor-dashboard');
+          router.push("/");
         } else {
           const { data: ngoData } = await supabase
-            .from('ngo')
-            .select('id')
-            .eq('email', data.email)
+            .from("ngo")
+            .select("id")
+            .eq("email", data.email)
             .single();
 
           if (ngoData) {
-            router.push('/ngo/dashboard');
+            router.push("/");
           } else {
-            router.push('/');
+            router.push("/");
           }
         }
       }, 1500); // 1.5 sec delay before redirect
@@ -93,14 +106,16 @@ export default function LoginPage() {
             height={64}
           />
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Logging you in...</h2>
-            <p className="text-gray-600">Please wait while we log you into your dashboard.</p>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Logging you in...
+            </h2>
+            <p className="text-gray-600">
+              Please wait while we log you into your dashboard.
+            </p>
           </div>
           <div className="h-6 w-6 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
-
-
 
       <div className="min-h-screen bg-stone-50 flex flex-col">
         {/* Main content */}
@@ -115,7 +130,9 @@ export default function LoginPage() {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-                  <h2 className="text-white text-2xl font-bold">Making a difference, one donation at a time</h2>
+                  <h2 className="text-white text-2xl font-bold">
+                    Making a difference, one donation at a time
+                  </h2>
                 </div>
               </div>
             </div>
@@ -123,14 +140,19 @@ export default function LoginPage() {
             <div className="w-full md:w-1/2">
               <Card className="border shadow-md">
                 <CardHeader className="text-center">
-                  <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+                  <CardTitle className="text-2xl font-bold">
+                    Welcome Back
+                  </CardTitle>
                   <CardDescription>
                     Sign in to your account to continue your mission
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form
+                      onSubmit={form.handleSubmit(onSubmit)}
+                      className="space-y-4"
+                    >
                       <FormField
                         control={form.control}
                         name="email"
@@ -138,7 +160,10 @@ export default function LoginPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter your email" {...field} />
+                              <Input
+                                placeholder="Enter your email"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -152,7 +177,11 @@ export default function LoginPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="Enter your password" {...field} />
+                              <Input
+                                type="password"
+                                placeholder="Enter your password"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -172,7 +201,10 @@ export default function LoginPage() {
                   <div className="mt-6 text-center">
                     <p className="text-sm text-gray-600">
                       Don't have an account?{" "}
-                      <Link href="/register" className="text-emerald-600 font-medium hover:underline">
+                      <Link
+                        href="/register"
+                        className="text-emerald-600 font-medium hover:underline"
+                      >
                         Register here
                       </Link>
                     </p>

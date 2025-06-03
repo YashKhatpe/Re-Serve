@@ -31,14 +31,13 @@ const items = [
   },
 ];
 
-
 interface AppSidebarProps {
   setActiveComponent: (component: string) => void;
   userType: "donor" | "ngo" | null;
 }
 export function AppSidebar({ setActiveComponent, userType }: AppSidebarProps) {
   return (
-    <Sidebar className="border-r border-orange-100">
+    <Sidebar className="border-r border-orange-100 pt-21">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-orange-600 font-semibold text-base">
@@ -52,7 +51,9 @@ export function AppSidebar({ setActiveComponent, userType }: AppSidebarProps) {
                     asChild
                     className="text-gray-700 hover:bg-orange-50 hover:text-orange-600 data-[active=true]:bg-orange-100 data-[active=true]:text-orange-600 text-base h-12"
                   >
-                    <button onClick={() => setActiveComponent(item.componentId)}>
+                    <button
+                      onClick={() => setActiveComponent(item.componentId)}
+                    >
                       <item.icon className="w-5 h-5" />
                       <span>{item.title}</span>
                     </button>

@@ -26,30 +26,30 @@ export function Navbar() {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="hidden md:flex items-center space-x-8"
       >
-        <a
-          href="#home"
+        <Link
+          href="/"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           Home
-        </a>
-        <a
+        </Link>
+        <Link
           href="#how-it-works"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           How It Works
-        </a>
-        <a
+        </Link>
+        <Link
           href="#features"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           Features
-        </a>
-        <a
+        </Link>
+        <Link
           href="#about"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           About Us
-        </a>
+        </Link>
         <div className="flex items-center space-x-2">
           {!loading && (
             <>
