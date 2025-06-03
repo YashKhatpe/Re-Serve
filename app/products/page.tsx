@@ -22,6 +22,7 @@ import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { Volume2 } from "lucide-react";
 import axios from "axios";
+import { Erica_One } from "next/font/google";
 
 // Define the type for the food safety API response
 interface FoodSafetyInfo {
@@ -250,59 +251,109 @@ export default function ProductDetailPage() {
     }
   };
 
-  const onOrderPlaced = async () => {
-    if (!delivery_person_name) {
-      alert("Please enter the name of the delivery person.");
-      return;
-    }
+const onOrderPlaced = async () => {
+  if (!delivery_person_name) {
+    alert("Please enter the name of the delivery person.");
+    return;
+  }
 
-    if (!delivery_person_phone_no || delivery_person_phone_no.length !== 10) {
-      alert("Please enter a valid 10-digit phone number.");
-      return;
-    }
+  if (!delivery_person_phone_no || delivery_person_phone_no.length !== 10) {
+    alert("Please enter a valid 10-digit phone number.");
+    return;
+  }
 
-    if (!serves || isNaN(Number(serves)) || Number(serves) < 1) {
-      alert("Please enter a valid number of serves (at least 1).");
-      return;
-    }
+  if (!serves || isNaN(Number(serves)) || Number(serves) < 1) {
+    alert("Please enter a valid number of serves (at least 1).");
+    return;
+  }
 
-    if (!otp || otp.length !== 4) {
-      alert("OTP must be exactly 4 digits.");
-      return;
-    }
+  if (!otp || otp.length !== 4) {
+    alert("OTP must be exactly 4 digits.");
+    return;
+  }
 
-    try {
-      const uniqueId = uuidv4();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { error } = await supabase.from("orders").insert([
-        {
-          id: uniqueId,
-          donor_form_id: selectedDonation.id,
-          ngo_id: user.id,
-          serves: Number(serves),
-          otp: otp,
-          created_at: new Date(),
-          delivery_person_name: delivery_person_name,
-          delivery_person_phone_no: delivery_person_phone_no,
-          delivery_status: "delivering",
-        },
-      ]);
-      if (error) throw error;
-      toast("Success", {
-        description: "The order was placed successfully",
+  if (Number(selectedDonation.serves) < Number(serves)) {
+    alert("Requested servering cannot be more than available.");
+    return;
+  }
+
+  try {
+    const uniqueId = uuidv4();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast("Error", {
+        description: "User not authenticated",
       });
-      console.log("Order placed successfully!");
-      setIsOpen(false);
-    } catch (error: any) {
-      toast("Fail", {
-        description: "Error placing order",
-      });
-      console.error("Error placing order:", error.message);
+      return;
     }
-  };
+
+    // First, insert the order
+    const { error: orderError } = await supabase.from("orders").insert([
+      {
+        id: uniqueId,
+        donor_form_id: selectedDonation.id,
+        ngo_id: user.id,
+        serves: Number(serves),
+        otp: otp,
+        created_at: new Date(),
+        delivery_person_name: delivery_person_name,
+        delivery_person_phone_no: delivery_person_phone_no,
+        delivery_status: "delivering",
+      },
+    ]);
+
+    if (orderError) {
+      console.error("Order insertion error:", orderError);
+      throw new Error(`Order insertion failed: ${orderError.message}`);
+    }
+
+    // Then update the donor_form serves count
+    const newServesCount = Number(selectedDonation.serves) - Number(serves);
+    
+    console.log("Updating donor_form:", {
+      id: selectedDonation.id,
+      currentServes: selectedDonation.serves,
+      requestedServes: serves,
+      newServesCount: newServesCount
+    });
+
+    const { error: updateError } = await supabase
+      .from("donor_form")
+      .update({ serves: newServesCount })
+      .eq("id", selectedDonation.id);
+
+    if (updateError) {
+      console.error("Update error:", updateError);
+      throw new Error(`Update failed: ${updateError.message}`);
+    }
+
+    toast("Success", {
+      description: "The order was placed successfully",
+    });
+    console.log("Order placed successfully!");
+    setIsOpen(false);
+
+  } catch (error: any) {
+    console.error("Error in onOrderPlaced:", error);
+    toast("Fail", {
+      description: `Error placing order: ${error.message}`,
+    });
+  }
+};
+  function onServeValueChange(value: any){
+    if(Number(value)>Number(selectedDonation?.serves)){
+      console.log("here1")
+      setServes(selectedDonation?.serves as any);
+    }
+    else{
+      console.log("here2");
+      setServes(value)
+    }
+  }
+
 
   // Helper to calculate expiry date from preparation date and shelf life hours
   function getApiExpiryDate() {
@@ -553,9 +604,11 @@ export default function ProductDetailPage() {
                 <Label htmlFor="serves">Number of Serves</Label>
                 <Input
                   id="serves"
+                  max={selectedDonation.serves}
+                  min="1"
                   type="number"
                   value={serves}
-                  onChange={(e) => setServes(e.target.value)}
+                  onChange={(e) => onServeValueChange(e.target.value)}
                   placeholder="Enter number of serves"
                   className="w-full"
                 />
@@ -586,7 +639,7 @@ export default function ProductDetailPage() {
                   className="w-full"
                 />
               </div>
-              <div className="flex flex-col space-y-2">
+              <div className=" hidden">
                 <Label htmlFor="otp">OTP</Label>
                 <div className="flex gap-2">
                   <Input
