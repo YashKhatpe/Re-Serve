@@ -178,7 +178,7 @@ export default function ProductDetailPage() {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 mt-10">
         <div className="flex flex-col gap-2 mb-6">
           <Button
             className="w-[100px] p-6 gap-2 text-gray-700 hover:text-emerald-600"
@@ -290,7 +290,6 @@ export default function ProductDetailPage() {
                     </p>
                   </div>
                 </div>
-
               </div>
             </CardContent>
           </Card>
