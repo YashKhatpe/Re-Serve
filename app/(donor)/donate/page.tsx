@@ -152,7 +152,7 @@ export default function DonatePage() {
         description: "Your food donation has been listed successfully.",
       });
 
-      router.push("/donor-dashboard");
+      router.push("/dashboard");
     } catch (error: any) {
       toast("Error Creating Donation", {
         description:
@@ -169,7 +169,7 @@ export default function DonatePage() {
         <Button
           variant="ghost"
           className="flex items-center text-primary"
-          onClick={() => router.push("/donor-dashboard")}
+          onClick={() => router.push("/dashboard")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
         </Button>
