@@ -173,7 +173,7 @@ export async function GET(request: Request) {
 
     // Launch Puppeteer browser once for all receipts
     const browser = await puppeteer.launch({
-      headless: "new", // or true for latest puppeteer
+      headless: true, // or true for latest puppeteer
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
