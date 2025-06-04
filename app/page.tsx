@@ -1,10 +1,11 @@
 "use client";
-import { Navbar } from "@/components/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import Footer from "@/components/landing/Footer";
+import { Navbar } from "@/components/Navbar";
+import { DashNavbar } from "@/components/DashNavbar";
 
 export default function Home() {
   return (

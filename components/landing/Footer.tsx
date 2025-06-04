@@ -143,7 +143,7 @@ export default function Footer() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 Re-Serve. All rights reserved. Making every meal count.
+              © 2025 Re-Serve. All rights reserved. Making every meal count.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a

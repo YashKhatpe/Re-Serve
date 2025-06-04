@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { VisitorInsights } from "@/components/dashboard/visitor-insights";
@@ -18,15 +18,39 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/auth-context";
 
 export default function NgoDashboard() {
+  const [data, setData] = useState<{
+    totalMealsServed: number;
+    totalDonations: number;
+    uniqueDonors: number;
+    newVolunteers: { name: string; phone: string; joined: string }[];
+  } | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const ngoId = user?.id;
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch(`/api/ngo-dashboard-data?ngo_id=${ngoId}`);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [ngoId]);
+
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* <div className="w-64 flex-shrink-0">
-        <Sidebar />
-      </div> */}
+    <div className="flex">
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* <Header /> */}
         <main className="flex-1 overflow-y-auto p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -55,10 +79,6 @@ export default function NgoDashboard() {
                     Request Food
                   </Button>
                 </Link>
-                {/* <Button variant="outline" size="sm" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export
-              </Button> */}
               </div>
             </motion.div>
 
@@ -72,7 +92,7 @@ export default function NgoDashboard() {
                 icon={<DollarSign className="h-5 w-5 text-white" />}
                 iconBg="bg-orange-500"
                 title="Total Meals Served"
-                value="500 Meals"
+                value={loading ? "..." : `${data?.totalMealsServed ?? 0} Meals`}
                 change="+2.5% "
                 trend="up"
               />
@@ -80,7 +100,9 @@ export default function NgoDashboard() {
                 icon={<ShoppingCart className="h-5 w-5 text-white" />}
                 iconBg="bg-orange-400"
                 title="Total Donations Received"
-                value="300 Donations"
+                value={
+                  loading ? "..." : `${data?.totalDonations ?? 0} Donations`
+                }
                 change="+1.5% "
                 trend="down"
               />
@@ -88,7 +110,7 @@ export default function NgoDashboard() {
                 icon={<Package className="h-5 w-5 text-white" />}
                 iconBg="bg-orange-300"
                 title="Meals Received From"
-                value="5 Locations"
+                value={loading ? "..." : `${data?.uniqueDonors ?? 0} Locations`}
                 change="+4.5% "
                 trend="up"
               />
@@ -96,7 +118,7 @@ export default function NgoDashboard() {
                 icon={<Users className="h-5 w-5 text-white" />}
                 iconBg="bg-orange-600"
                 title="New Volunteers"
-                value="8"
+                value={loading ? "..." : `${data?.newVolunteers?.length ?? 0}`}
                 change="+0.5% "
                 trend="up"
               />
@@ -117,21 +139,14 @@ export default function NgoDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-            >
-              {/* <CustomerSatisfaction /> */}
-              {/* <TargetVsReality /> */}
-            </motion.div>
+            ></motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-            >
-              {/* <TopProducts /> */}
-              {/* <SalesMapping /> */}
-              {/* <VolumeVsService /> */}
-            </motion.div>
+            ></motion.div>
           </motion.div>
         </main>
       </div>

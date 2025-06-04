@@ -95,181 +95,167 @@ export default function DonorDashboard() {
   };
 
   return (
-    // <div className="flex bg-gray-50">
-      
-    //   <div className="flex-1 flex flex-col overflow-hidden">
-    //     <main className="flex-1 overflow-y-auto p-6">
     <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.6 }}
-    className="space-y-6"
-  >
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="flex justify-between items-center"
+      className="space-y-6"
     >
-      <div>
-        <h2 className="text-lg font-medium text-orange-600">
-          Today's Sales
-        </h2>
-        <p className="text-sm text-gray-500">Sales summary</p>
-      </div>
-      <div className="flex gap-3">
-        <Link href="/donate">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex justify-between items-center"
+      >
+        <div>
+          <h2 className="text-lg font-medium text-orange-600">Today's Sales</h2>
+          <p className="text-sm text-gray-500">Sales summary</p>
+        </div>
+        <div className="flex gap-3">
+          <Link href="/donate">
+            <Button
+              variant="default"
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              Donate
+            </Button>
+          </Link>
           <Button
-            variant="default"
-            className="bg-orange-500 hover:bg-orange-600"
+            onClick={handleGenerateLastMonth}
+            variant="outline"
+            size="sm"
+            className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
           >
-            Donate
+            <FileText className="h-4 w-4" />
+            {loading ? "Generating..." : "Last Month's Receipts"}
           </Button>
-        </Link>
-        <Button
-          onClick={handleGenerateLastMonth}
-          variant="outline"
-          size="sm"
-          className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
-        >
-          <FileText className="h-4 w-4" />
-          {loading ? "Generating..." : "Last Month's Receipts"}
-        </Button>
-      </div>
-    </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-            >
-              <StatsCard
-                icon={<DollarSign className="h-5 w-5 text-white" />}
-                iconBg="bg-orange-500"
-                title="Total Today's Donation"
-                value="Rs. 1000"
-                change="+4.5% "
-                trend="up"
-              />
-              <StatsCard
-                icon={<ShoppingCart className="h-5 w-5 text-white" />}
-                iconBg="bg-orange-400"
-                title="Total Donations"
-                value="300"
-                change="-1.5% "
-                trend="down"
-              />
-              <StatsCard
-                icon={<Package className="h-5 w-5 text-white" />}
-                iconBg="bg-orange-300"
-                title="Number of Donors"
-                value="5"
-                change="+2.5% "
-                trend="up"
-              />
-              <StatsCard
-                icon={<Users className="h-5 w-5 text-white" />}
-                iconBg="bg-orange-600"
-                title="Number of people served"
-                value="350"
-                change="+0.5% "
-                trend="up"
-              />
-            </motion.div>
+        </div>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <StatsCard
+          icon={<DollarSign className="h-5 w-5 text-white" />}
+          iconBg="bg-orange-500"
+          title="Total Today's Donation"
+          value="Rs. 1000"
+          change="+4.5% "
+          trend="up"
+        />
+        <StatsCard
+          icon={<ShoppingCart className="h-5 w-5 text-white" />}
+          iconBg="bg-orange-400"
+          title="Total Donations"
+          value="300"
+          change="-1.5% "
+          trend="down"
+        />
+        <StatsCard
+          icon={<Package className="h-5 w-5 text-white" />}
+          iconBg="bg-orange-300"
+          title="Number of Donors"
+          value="5"
+          change="+2.5% "
+          trend="up"
+        />
+        <StatsCard
+          icon={<Users className="h-5 w-5 text-white" />}
+          iconBg="bg-orange-600"
+          title="Number of people served"
+          value="350"
+          change="+0.5% "
+          trend="up"
+        />
+      </motion.div>
 
-            {/* Tax Receipt Generator Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium text-orange-600">
-                    Generate Tax Deduction Receipts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col sm:flex-row gap-4 items-end">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">Start Date</label>
-                      <Popover
-                        open={openStartDate}
-                        onOpenChange={setOpenStartDate}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-[240px] justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
-                          >
-                            <Calendar className="mr-2 h-4 w-4" />
-                            {startDate
-                              ? format(startDate, "PPP")
-                              : "Select date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <CalendarComponent
-                            mode="single"
-                            selected={startDate}
-                            onSelect={(date) => {
-                              setStartDate(date);
-                              setOpenStartDate(false);
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">End Date</label>
-                      <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-[240px] justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
-                          >
-                            <Calendar className="mr-2 h-4 w-4" />
-                            {endDate ? format(endDate, "PPP") : "Select date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <CalendarComponent
-                            mode="single"
-                            selected={endDate}
-                            onSelect={(date) => {
-                              setEndDate(date);
-                              setOpenEndDate(false);
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+      {/* Tax Receipt Generator Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-orange-600">
+              Generate Tax Deduction Receipts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Start Date</label>
+                <Popover open={openStartDate} onOpenChange={setOpenStartDate}>
+                  <PopoverTrigger asChild>
                     <Button
-                      onClick={handleGenerateReceipts}
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
-                      disabled={loading}
+                      variant="outline"
+                      className="w-[240px] justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
                     >
-                      {loading ? "Generating..." : "Generate Receipts"}
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : "Select date"}
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        setStartDate(date);
+                        setOpenStartDate(false);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">End Date</label>
+                <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-[240px] justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => {
+                        setEndDate(date);
+                        setOpenEndDate(false);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Button
+                onClick={handleGenerateReceipts}
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                disabled={loading}
+              >
+                {loading ? "Generating..." : "Generate Receipts"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-            >
-              <TotalRevenue />
-              <VisitorInsights />
-            </motion.div>
-          </motion.div>
-        // </main>
-    //   </div>
-    // </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        <TotalRevenue />
+        <VisitorInsights />
+      </motion.div>
+    </motion.div>
   );
 }

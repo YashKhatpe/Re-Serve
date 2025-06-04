@@ -6,7 +6,7 @@ import Link from "next/link";
 export default function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center justify-between px-4 md:px-8 lg:px-16 bg-gradient-to-br from-orange-50 to-red-50">
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pt-20">
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pb-40">
         {/* Left Content */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}

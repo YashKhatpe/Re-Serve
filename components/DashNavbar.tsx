@@ -8,7 +8,7 @@ export function DashNavbar() {
   const { userType, loading } = useAuth();
 
   return (
-    <nav className="w-full absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6">
+    <nav className="w-full sticky top-0 left-0 z-20 flex items-center justify-between h-20 px-6">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -32,7 +32,7 @@ export function DashNavbar() {
         >
           Home
         </Link>
-        <Link
+        {/* <Link
           href="#how-it-works"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
@@ -49,7 +49,7 @@ export function DashNavbar() {
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           About Us
-        </Link>
+        </Link> */}
         <div className="flex items-center space-x-2">
           {!loading && (
             <>
@@ -96,7 +96,7 @@ export function DashNavbar() {
                   </Button>
                 </Link>
               )}
-              {userType && (
+              {/* {userType && (
                 <Link href="/dashboard">
                   <Button
                     variant="outline"
@@ -105,7 +105,7 @@ export function DashNavbar() {
                     Dashboard
                   </Button>
                 </Link>
-              )}
+              )} */}
             </>
           )}
         </div>

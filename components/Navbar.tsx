@@ -8,7 +8,7 @@ export function Navbar() {
   const { userType, loading } = useAuth();
 
   return (
-    <nav className="w-full absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6 bg-gradient-to-br from-orange-50 to-red-50 ">
+    <nav className="w-full sticky top-0 left-0 z-20 flex items-center justify-between h-20 px-6 bg-gradient-to-br from-orange-50 to-red-50">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -33,19 +33,19 @@ export function Navbar() {
           Home
         </Link>
         <Link
-          href="#how-it-works"
+          href="/how-it-works"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           How It Works
         </Link>
         <Link
-          href="#features"
+          href="/features"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           Features
         </Link>
         <Link
-          href="#about"
+          href="/about"
           className="text-gray-700 hover:text-orange-500 transition-colors"
         >
           About Us

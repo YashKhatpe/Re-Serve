@@ -115,7 +115,10 @@ export default function FoodListingPage() {
   useEffect(() => {
     async function fetchDonations() {
       let latLng = { lat: 0, lng: 0 };
-      const { data, error } = await supabase.from("donor_form").select("*").gte("serves",1);
+      const { data, error } = await supabase
+        .from("donor_form")
+        .select("*")
+        .gte("serves", 1);
       if (error) {
         console.error("Error fetching donations:", error);
       } else {
@@ -511,312 +514,333 @@ export default function FoodListingPage() {
     }
   };
 
-return (
-  <>
-    <Navbar />
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3]">
-      {/* Main Content */}
-      <div className="container mx-auto px-6 py-12">
-        <div className="flex flex-col lg:flex-row gap-12 items-start">
-          {/* Left Side - Search and Filters */}
-          <div className="w-full lg:w-1/3 space-y-8 lg:sticky lg:top-6 lg:self-start">
-            <div className="space-y-6">
-              <h1 className="text-4xl lg:text-5xl font-bold text-[#2D3748] leading-tight">
-                Find Food{" "}
-                <span className="text-[#FF6B35]">Rescuers</span>
-              </h1>
-              <p className="text-lg text-[#718096] leading-relaxed">
-                Discover available food donations in your area and make every meal matter.
-              </p>
-              
-              <div className="flex flex-wrap gap-4">
-                <Button 
-                  onClick={handleVoiceQuery}
-                  className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-full px-6 py-3 font-medium transition-all shadow-lg hover:shadow-xl"
-                >
-                  Try Voice Query
-                </Button>
-              </div>
-            </div>
-
-            {/* Search */}
-            <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#718096] h-5 w-5" />
-                <Input
-                  placeholder="Search by food name or type..."
-                  className="pl-12 w-full bg-white/80 backdrop-blur-sm border-[#E8E5E1] rounded-xl py-3 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <Button
-                onClick={() => setShowFilters(!showFilters)}
-                variant="outline"
-                className="flex items-center gap-2 w-full border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white rounded-xl transition-colors"
-              >
-                <Filter size={18} />
-                {showFilters ? "Hide Filters" : "Show Filters"}
-              </Button>
-            </div>
-
-            {/* Filter Panel */}
-            {showFilters && (
-              <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl font-bold text-[#2D3748]">
-                    Filter Options
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Food Type Filters */}
-                  <div>
-                    <h3 className="font-semibold mb-3 text-[#4A5568]">Food Type</h3>
-                    <div className="grid grid-cols-1 gap-3">
-                      {[
-                        ...FOOD_PREFERENCES,
-                        // Add any food types from the data that aren't in FOOD_PREFERENCES
-                        ...Array.from(
-                          new Set(donations.map((d) => d.food_type))
-                        )
-                          .filter(
-                            (type) =>
-                              !FOOD_PREFERENCES.some((p) => p.value === type)
-                          )
-                          .map((type) => ({
-                            value: type,
-                            label: type.charAt(0).toUpperCase() + type.slice(1),
-                          })),
-                      ].map((preference) => (
-                        <div
-                          key={preference.value}
-                          className="flex items-center space-x-2 p-3 rounded-xl bg-white/50 border border-[#E8E5E1] hover:bg-white/80 transition-colors"
-                        >
-                          <Checkbox
-                            id={`filter-${preference.value}`}
-                            checked={selectedFoodTypes.includes(preference.value)}
-                            onCheckedChange={() => toggleFoodType(preference.value)}
-                            className="data-[state=checked]:bg-[#FF6B35] data-[state=checked]:border-[#FF6B35]"
-                          />
-                          <label
-                            htmlFor={`filter-${preference.value}`}
-                            className="text-sm text-[#4A5568] cursor-pointer"
-                          >
-                            {preference.label}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Distance Filter */}
-                  <div>
-                    <h3 className="font-semibold mb-3 text-[#4A5568]">
-                      Maximum Distance: {maxDistance} km
-                    </h3>
-                    <Slider
-                      value={maxDistance}
-                      min={1}
-                      max={100}
-                      onChange={(e) => setMaxDistance(Number(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-
-                  {/* Reset Filters Button */}
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSelectedFoodTypes([]);
-                      setMaxDistance(50);
-                    }}
-                    className="w-full border-[#E8E5E1] text-[#4A5568] hover:bg-[#F5F3F0] rounded-xl transition-colors"
-                  >
-                    Reset Filters
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Stats */}
-            <div className="flex flex-wrap gap-6 pt-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#FF6B35]">{filteredDonations.length}</div>
-                <div className="text-sm text-[#718096]">Available</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#FF6B35]">{donations.length}</div>
-                <div className="text-sm text-[#718096]">Total Donations</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side - Food Listings */}
-          <div className="w-full lg:w-2/3">
-            <Tabs defaultValue="list" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm border border-[#E8E5E1] rounded-2xl p-1">
-                <TabsTrigger 
-                  value="list"
-                  className="rounded-xl data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
-                >
-                  List View
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="map"
-                  className="rounded-xl data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
-                >
-                  Map View
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="list" className="space-y-6">
-                <p className="text-[#718096] mb-4">
-                  Showing {filteredDonations.length} of {donations.length} donations
+  return (
+    <>
+      {/* <Navbar /> */}
+      <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3]">
+        {/* Main Content */}
+        <div className="container mx-auto px-6 py-12">
+          <div className="flex flex-col lg:flex-row gap-12 items-start">
+            {/* Left Side - Search and Filters */}
+            <div className="w-full lg:w-1/3 space-y-8 lg:sticky lg:top-6 lg:self-start">
+              <div className="space-y-6">
+                <h1 className="text-4xl lg:text-5xl font-bold text-[#2D3748] leading-tight">
+                  Find Food <span className="text-[#FF6B35]">Rescuers</span>
+                </h1>
+                <p className="text-lg text-[#718096] leading-relaxed">
+                  Discover available food donations in your area and make every
+                  meal matter.
                 </p>
 
-                {/* Food Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {filteredDonations.length > 0 ? (
-                    filteredDonations.map((donation) => (
-                      <Card
-                        key={donation.id}
-                        className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-2xl cursor-pointer pt-0"
-                        onClick={() => handleCardClick(donation)}
-                      >
-                        <div className="relative h-64">
-                          <Image
-                            src={donation.food_image}
-                            alt={donation.food_name}
-                            fill
-                            className="object-cover"
-                          />
-                          <div className="absolute top-4 right-4 bg-[#FF6B35] text-white px-3 py-1 rounded-full text-sm font-medium">
-                            {donation.food_type}
-                          </div>
-                        </div>
-                        <CardContent className="p-6">
-                          <h3 className="text-xl font-bold text-[#2D3748] mb-2">
-                            {donation.food_name}
-                          </h3>
-                          <p className="text-[#718096] mb-3">
-                            Serves {donation.serves} people
-                          </p>
-                          <p className="text-[#4A5568] mb-3">
-                            Expires: {new Date(donation.expiry_date_time).toLocaleString()}
-                          </p>
-                          {donation.distance > 0 && (
-                            <div className="flex items-center text-[#718096]">
-                              <MapPin size={16} className="mr-2 text-[#FF6B35]" />
-                              <span>{donation.distance.toFixed(1)} km away</span>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="col-span-2 text-center py-16">
-                      <p className="text-[#718096] text-lg">
-                        No donations match your filters. Try adjusting your search criteria.
-                      </p>
-                    </div>
-                  )}
+                <div className="flex flex-wrap gap-4">
+                  <Button
+                    onClick={handleVoiceQuery}
+                    className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-full px-6 py-3 font-medium transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Try Voice Query
+                  </Button>
                 </div>
-              </TabsContent>
+              </div>
 
-              <TabsContent value="map" className="space-y-6">
+              {/* Search */}
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#718096] h-5 w-5" />
+                  <Input
+                    placeholder="Search by food name or type..."
+                    className="pl-12 w-full bg-white/80 backdrop-blur-sm border-[#E8E5E1] rounded-xl py-3 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                <Button
+                  onClick={() => setShowFilters(!showFilters)}
+                  variant="outline"
+                  className="flex items-center gap-2 w-full border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white rounded-xl transition-colors"
+                >
+                  <Filter size={18} />
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                </Button>
+              </div>
+
+              {/* Filter Panel */}
+              {showFilters && (
                 <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
-                  <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-[#2D3748] text-center">
-                      Food Donation Map
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl font-bold text-[#2D3748]">
+                      Filter Options
                     </CardTitle>
-                    <p className="text-center text-[#718096] max-w-2xl mx-auto">
-                      Hover over or click on a marker to see details about the food
-                      available for donation.
-                    </p>
                   </CardHeader>
-                  <CardContent>
-                    <div className="rounded-2xl overflow-hidden">
-                      <MapClientWrapper donations={filteredDonations} />
+                  <CardContent className="space-y-6">
+                    {/* Food Type Filters */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-[#4A5568]">
+                        Food Type
+                      </h3>
+                      <div className="grid grid-cols-1 gap-3">
+                        {[
+                          ...FOOD_PREFERENCES,
+                          // Add any food types from the data that aren't in FOOD_PREFERENCES
+                          ...Array.from(
+                            new Set(donations.map((d) => d.food_type))
+                          )
+                            .filter(
+                              (type) =>
+                                !FOOD_PREFERENCES.some((p) => p.value === type)
+                            )
+                            .map((type) => ({
+                              value: type,
+                              label:
+                                type.charAt(0).toUpperCase() + type.slice(1),
+                            })),
+                        ].map((preference) => (
+                          <div
+                            key={preference.value}
+                            className="flex items-center space-x-2 p-3 rounded-xl bg-white/50 border border-[#E8E5E1] hover:bg-white/80 transition-colors"
+                          >
+                            <Checkbox
+                              id={`filter-${preference.value}`}
+                              checked={selectedFoodTypes.includes(
+                                preference.value
+                              )}
+                              onCheckedChange={() =>
+                                toggleFoodType(preference.value)
+                              }
+                              className="data-[state=checked]:bg-[#FF6B35] data-[state=checked]:border-[#FF6B35]"
+                            />
+                            <label
+                              htmlFor={`filter-${preference.value}`}
+                              className="text-sm text-[#4A5568] cursor-pointer"
+                            >
+                              {preference.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+
+                    {/* Distance Filter */}
+                    <div>
+                      <h3 className="font-semibold mb-3 text-[#4A5568]">
+                        Maximum Distance: {maxDistance} km
+                      </h3>
+                      <Slider
+                        value={maxDistance}
+                        min={1}
+                        max={100}
+                        onChange={(e) => setMaxDistance(Number(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Reset Filters Button */}
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSelectedFoodTypes([]);
+                        setMaxDistance(50);
+                      }}
+                      className="w-full border-[#E8E5E1] text-[#4A5568] hover:bg-[#F5F3F0] rounded-xl transition-colors"
+                    >
+                      Reset Filters
+                    </Button>
                   </CardContent>
                 </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-      </div>
+              )}
 
-      {/* Voice Query Dialog */}
-      <Dialog
-        open={isDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            stopRecording();
-            setIsDialogOpen(false);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[600px] bg-white/95 backdrop-blur-sm border-[#E8E5E1] rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#2D3748] text-center">
-              Voice Query
-            </DialogTitle>
-            <DialogDescription className="text-[#718096] text-center">
-              Use voice commands to search for food donations
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 p-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2 text-[#4A5568]">
-                Current Question:
-              </h3>
-              <div className="p-4 bg-[#F5F3F0] rounded-xl border border-[#E8E5E1]">
-                <p className="text-[#2D3748]">{currentQuestion}</p>
-              </div>
-            </div>
-
-            {userQuery && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2 text-[#4A5568]">
-                  Your Answer:
-                </h3>
-                <div className="p-4 bg-[#C6F6D5] rounded-xl border border-[#E8E5E1]">
-                  <p className="text-[#2D3748]">{userQuery}</p>
+              {/* Stats */}
+              <div className="flex flex-wrap gap-6 pt-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-[#FF6B35]">
+                    {filteredDonations.length}
+                  </div>
+                  <div className="text-sm text-[#718096]">Available</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-[#FF6B35]">
+                    {donations.length}
+                  </div>
+                  <div className="text-sm text-[#718096]">Total Donations</div>
                 </div>
               </div>
-            )}
-
-            <div className="flex justify-center">
-              {isRecording ? (
-                <Button
-                  onClick={stopRecording}
-                  className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-6 py-3 font-medium transition-all shadow-lg"
-                >
-                  <span className="mr-2">●</span> Recording... (Click to Stop)
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleAskQuestion}
-                  disabled={isLoading}
-                  className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl px-6 py-3 font-medium transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
-                >
-                  {isLoading ? "Processing..." : "Ask Question"}
-                </Button>
-              )}
             </div>
 
-            {error && (
-              <div className="p-4 bg-[#FED7D7] rounded-xl border border-red-200">
-                <p className="text-red-700">Error: {error}</p>
-              </div>
-            )}
+            {/* Right Side - Food Listings */}
+            <div className="w-full lg:w-2/3">
+              <Tabs defaultValue="list" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm border border-[#E8E5E1] rounded-2xl p-1">
+                  <TabsTrigger
+                    value="list"
+                    className="rounded-xl data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+                  >
+                    List View
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="map"
+                    className="rounded-xl data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+                  >
+                    Map View
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="list" className="space-y-6">
+                  <p className="text-[#718096] mb-4">
+                    Showing {filteredDonations.length} of {donations.length}{" "}
+                    donations
+                  </p>
+
+                  {/* Food Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {filteredDonations.length > 0 ? (
+                      filteredDonations.map((donation) => (
+                        <Card
+                          key={donation.id}
+                          className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-2xl cursor-pointer pt-0"
+                          onClick={() => handleCardClick(donation)}
+                        >
+                          <div className="relative h-64">
+                            <Image
+                              src={donation.food_image}
+                              alt={donation.food_name}
+                              fill
+                              className="object-cover"
+                            />
+                            <div className="absolute top-4 right-4 bg-[#FF6B35] text-white px-3 py-1 rounded-full text-sm font-medium">
+                              {donation.food_type}
+                            </div>
+                          </div>
+                          <CardContent className="p-6">
+                            <h3 className="text-xl font-bold text-[#2D3748] mb-2">
+                              {donation.food_name}
+                            </h3>
+                            <p className="text-[#718096] mb-3">
+                              Serves {donation.serves} people
+                            </p>
+                            <p className="text-[#4A5568] mb-3">
+                              Expires:{" "}
+                              {new Date(
+                                donation.expiry_date_time
+                              ).toLocaleString()}
+                            </p>
+                            {donation.distance > 0 && (
+                              <div className="flex items-center text-[#718096]">
+                                <MapPin
+                                  size={16}
+                                  className="mr-2 text-[#FF6B35]"
+                                />
+                                <span>
+                                  {donation.distance.toFixed(1)} km away
+                                </span>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="col-span-2 text-center py-16">
+                        <p className="text-[#718096] text-lg">
+                          No donations match your filters. Try adjusting your
+                          search criteria.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="map" className="space-y-6">
+                  <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
+                    <CardHeader>
+                      <CardTitle className="text-2xl font-bold text-[#2D3748] text-center">
+                        Food Donation Map
+                      </CardTitle>
+                      <p className="text-center text-[#718096] max-w-2xl mx-auto">
+                        Hover over or click on a marker to see details about the
+                        food available for donation.
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="rounded-2xl overflow-hidden">
+                        <MapClientWrapper donations={filteredDonations} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  </>
-);
+        </div>
+
+        {/* Voice Query Dialog */}
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              stopRecording();
+              setIsDialogOpen(false);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-[600px] bg-white/95 backdrop-blur-sm border-[#E8E5E1] rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-[#2D3748] text-center">
+                Voice Query
+              </DialogTitle>
+              <DialogDescription className="text-[#718096] text-center">
+                Use voice commands to search for food donations
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6 p-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-2 text-[#4A5568]">
+                  Current Question:
+                </h3>
+                <div className="p-4 bg-[#F5F3F0] rounded-xl border border-[#E8E5E1]">
+                  <p className="text-[#2D3748]">{currentQuestion}</p>
+                </div>
+              </div>
+
+              {userQuery && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 text-[#4A5568]">
+                    Your Answer:
+                  </h3>
+                  <div className="p-4 bg-[#C6F6D5] rounded-xl border border-[#E8E5E1]">
+                    <p className="text-[#2D3748]">{userQuery}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-center">
+                {isRecording ? (
+                  <Button
+                    onClick={stopRecording}
+                    className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-6 py-3 font-medium transition-all shadow-lg"
+                  >
+                    <span className="mr-2">●</span> Recording... (Click to Stop)
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleAskQuestion}
+                    disabled={isLoading}
+                    className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl px-6 py-3 font-medium transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+                  >
+                    {isLoading ? "Processing..." : "Ask Question"}
+                  </Button>
+                )}
+              </div>
+
+              {error && (
+                <div className="p-4 bg-[#FED7D7] rounded-xl border border-red-200">
+                  <p className="text-red-700">Error: {error}</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
+  );
 }
