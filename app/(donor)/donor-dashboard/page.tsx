@@ -25,6 +25,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calender";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import GenerateReceipt from "@/components/GenerateReceipt";
 
 export default function DonorDashboard() {
   const [loading, setLoading] = useState(false);
@@ -105,17 +106,20 @@ export default function DonorDashboard() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="flex justify-between items-center"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0"
       >
+        {/* Title & Subtitle */}
         <div>
           <h2 className="text-lg font-medium text-orange-600">Today's Sales</h2>
           <p className="text-sm text-gray-500">Sales summary</p>
         </div>
-        <div className="flex gap-3">
-          <Link href="/donate">
+
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Link href="/donate" className="w-full sm:w-auto">
             <Button
               variant="default"
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
             >
               Donate
             </Button>
@@ -124,13 +128,14 @@ export default function DonorDashboard() {
             onClick={handleGenerateLastMonth}
             variant="outline"
             size="sm"
-            className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+            className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 w-full sm:w-auto"
           >
             <FileText className="h-4 w-4" />
             {loading ? "Generating..." : "Last Month's Receipts"}
           </Button>
         </div>
       </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -172,7 +177,7 @@ export default function DonorDashboard() {
       </motion.div>
 
       {/* Tax Receipt Generator Card */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
@@ -245,8 +250,8 @@ export default function DonorDashboard() {
             </div>
           </CardContent>
         </Card>
-      </motion.div>
-
+      </motion.div> */}
+      <GenerateReceipt />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

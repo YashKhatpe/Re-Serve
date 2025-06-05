@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, Receipt, ShoppingCart, Building } from "lucide-react";
+import { SheetTitle } from "../ui/sheet";
 
 const items = [
   {
@@ -37,10 +38,10 @@ interface AppSidebarProps {
 }
 export function AppSidebar({ setActiveComponent, userType }: AppSidebarProps) {
   return (
-    <Sidebar className="border-r border-orange-100 pt-21">
+    <Sidebar className="bg-white border-r border-orange-100 pt-20">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-orange-600 font-semibold text-base">
+          <SidebarGroupLabel className="text-orange-600 font-semibold text-base px-4">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -53,6 +54,7 @@ export function AppSidebar({ setActiveComponent, userType }: AppSidebarProps) {
                   >
                     <button
                       onClick={() => setActiveComponent(item.componentId)}
+                      className="flex items-center gap-2 w-full"
                     >
                       <item.icon className="w-5 h-5" />
                       <span>{item.title}</span>

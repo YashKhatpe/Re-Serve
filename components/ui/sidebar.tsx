@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -141,7 +141,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper flex h-full w-[11rem] min-h-svh  has-[[data-variant=inset]]:bg-sidebar",
+              "group/sidebar-wrapper flex h-full md:w-[11rem] lg:w-[11rem] min-h-svh  has-[[data-variant=inset]]:bg-sidebar",
               className
             )}
             ref={ref}
@@ -197,6 +197,7 @@ const Sidebar = React.forwardRef<
     if (isMobile) {
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+          <SheetTitle>Navigation</SheetTitle>
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"

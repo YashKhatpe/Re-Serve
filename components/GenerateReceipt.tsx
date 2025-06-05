@@ -20,7 +20,6 @@ export default function GenerateReceipt() {
   const [openStartDate, setOpenStartDate] = useState(false);
   const [openEndDate, setOpenEndDate] = useState(false);
 
-  // Generate Batch Receipts Function
   const handleGenerateReceipts = async () => {
     if (!startDate || !endDate) {
       alert("Please select both start and end dates");
@@ -29,11 +28,9 @@ export default function GenerateReceipt() {
 
     setLoading(true);
     try {
-      // Format dates for API call: YYYY-MM-DD
       const formattedStartDate = format(startDate, "yyyy-MM-dd");
       const formattedEndDate = format(endDate, "yyyy-MM-dd");
 
-      // Open in new tab to download ZIP file
       window.open(
         `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
         "_blank"
@@ -43,42 +40,6 @@ export default function GenerateReceipt() {
       alert("Failed to generate tax receipts. Please try again.");
     }
     setLoading(false);
-  };
-
-  // Generate Last Month's Receipts (Quick Access)
-  const handleGenerateLastMonth = async () => {
-    setLoading(true);
-    try {
-      const today = new Date();
-      const lastMonth = new Date();
-      lastMonth.setMonth(today.getMonth() - 1);
-
-      const formattedStartDate = format(
-        new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1),
-        "yyyy-MM-dd"
-      );
-      const formattedEndDate = format(
-        new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0),
-        "yyyy-MM-dd"
-      );
-
-      const previewUrl = `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
-
-      // Fetch first to check response
-      const response = await fetch(previewUrl);
-
-      if (response.status === 200) {
-        window.open(previewUrl, "_blank");
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error || "Failed to generate receipts.");
-      }
-    } catch (error) {
-      console.error("Error generating receipts:", error);
-      alert("Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -94,14 +55,15 @@ export default function GenerateReceipt() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap items-stretch sm:items-end">
+            {/* Start Date Picker */}
+            <div className="flex flex-col gap-2 w-full sm:w-[240px]">
               <label className="text-sm font-medium">Start Date</label>
               <Popover open={openStartDate} onOpenChange={setOpenStartDate}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[240px] justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
+                    className="w-full justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
                   >
                     <Calendar className="mr-2 h-4 w-4" />
                     {startDate ? format(startDate, "PPP") : "Select date"}
@@ -120,13 +82,15 @@ export default function GenerateReceipt() {
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="flex flex-col gap-2">
+
+            {/* End Date Picker */}
+            <div className="flex flex-col gap-2 w-full sm:w-[240px]">
               <label className="text-sm font-medium">End Date</label>
               <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[240px] justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
+                    className="w-full justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
                   >
                     <Calendar className="mr-2 h-4 w-4" />
                     {endDate ? format(endDate, "PPP") : "Select date"}
@@ -145,13 +109,17 @@ export default function GenerateReceipt() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button
-              onClick={handleGenerateReceipts}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-              disabled={loading}
-            >
-              {loading ? "Generating..." : "Generate Receipts"}
-            </Button>
+
+            {/* Generate Button */}
+            <div className="w-full sm:w-auto">
+              <Button
+                onClick={handleGenerateReceipts}
+                className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto"
+                disabled={loading}
+              >
+                {loading ? "Generating..." : "Generate Receipts"}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
