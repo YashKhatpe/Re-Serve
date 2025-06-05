@@ -251,109 +251,120 @@ export default function ProductDetailPage() {
     }
   };
 
-const onOrderPlaced = async () => {
-  if (!delivery_person_name) {
-    alert("Please enter the name of the delivery person.");
-    return;
-  }
-
-  if (!delivery_person_phone_no || delivery_person_phone_no.length !== 10) {
-    alert("Please enter a valid 10-digit phone number.");
-    return;
-  }
-
-  if (!serves || isNaN(Number(serves)) || Number(serves) < 1) {
-    alert("Please enter a valid number of serves (at least 1).");
-    return;
-  }
-
-  if (!otp || otp.length !== 4) {
-    alert("OTP must be exactly 4 digits.");
-    return;
-  }
-
-  if (Number(selectedDonation.serves) < Number(serves)) {
-    alert("Requested servering cannot be more than available.");
-    return;
-  }
-
-  try {
-    const uniqueId = uuidv4();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    
-    if (!user) {
-      toast("Error", {
-        description: "User not authenticated",
-      });
+  const onOrderPlaced = async () => {
+    if (!delivery_person_name) {
+      alert("Please enter the name of the delivery person.");
       return;
     }
 
-    // First, insert the order
-    const { error: orderError } = await supabase.from("orders").insert([
-      {
-        id: uniqueId,
-        donor_form_id: selectedDonation.id,
-        ngo_id: user.id,
-        serves: Number(serves),
-        otp: otp,
-        created_at: new Date(),
-        delivery_person_name: delivery_person_name,
-        delivery_person_phone_no: delivery_person_phone_no,
-        delivery_status: "delivering",
-      },
-    ]);
-
-    if (orderError) {
-      console.error("Order insertion error:", orderError);
-      throw new Error(`Order insertion failed: ${orderError.message}`);
+    if (!delivery_person_phone_no || delivery_person_phone_no.length !== 10) {
+      alert("Please enter a valid 10-digit phone number.");
+      return;
     }
 
-    // Then update the donor_form serves count
-    const newServesCount = Number(selectedDonation.serves) - Number(serves);
-    
-    console.log("Updating donor_form:", {
-      id: selectedDonation.id,
-      currentServes: selectedDonation.serves,
-      requestedServes: serves,
-      newServesCount: newServesCount
-    });
-
-    const { error: updateError } = await supabase
-      .from("donor_form")
-      .update({ serves: newServesCount })
-      .eq("id", selectedDonation.id);
-
-    if (updateError) {
-      console.error("Update error:", updateError);
-      throw new Error(`Update failed: ${updateError.message}`);
+    if (!serves || isNaN(Number(serves)) || Number(serves) < 1) {
+      alert("Please enter a valid number of serves (at least 1).");
+      return;
     }
 
-    toast("Success", {
-      description: "The order was placed successfully",
-    });
-    console.log("Order placed successfully!");
-    setIsOpen(false);
+    if (!otp || otp.length !== 4) {
+      alert("OTP must be exactly 4 digits.");
+      return;
+    }
 
-  } catch (error: any) {
-    console.error("Error in onOrderPlaced:", error);
-    toast("Fail", {
-      description: `Error placing order: ${error.message}`,
-    });
-  }
-};
-  function onServeValueChange(value: any){
-    if(Number(value)>Number(selectedDonation?.serves)){
-      console.log("here1")
+    if (Number(selectedDonation.serves) < Number(serves)) {
+      alert("Requested servering cannot be more than available.");
+      return;
+    }
+
+    try {
+      const uniqueId = uuidv4();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast("Error", {
+          description: "User not authenticated",
+        });
+        return;
+      }
+
+      // Retrieve donor id from the food.
+      const { data: donorId, error: donorIdError } = await supabase
+        .from("donor_form")
+        .select("donor_id")
+        .eq("id", selectedDonation.id);
+
+      console.log("Donor id retrieved: ", donorId?.[0].donor_id);
+
+      if (donorIdError) {
+        console.error("Donor Id Retrieval Fail:", donorIdError);
+        throw new Error(`Order insertion failed: ${donorIdError.message}`);
+      }
+
+      // First, insert the order
+      const { error: orderError } = await supabase.from("orders").insert([
+        {
+          id: uniqueId,
+          donor_form_id: selectedDonation.id,
+          ngo_id: user.id,
+          serves: Number(serves),
+          otp: otp,
+          created_at: new Date(),
+          delivery_person_name: delivery_person_name,
+          delivery_person_phone_no: delivery_person_phone_no,
+          delivery_status: "delivering",
+          donor_id: donorId?.[0].donor_id,
+        },
+      ]);
+
+      if (orderError) {
+        console.error("Order insertion error:", orderError);
+        throw new Error(`Order insertion failed: ${orderError.message}`);
+      }
+
+      // Then update the donor_form serves count
+      const newServesCount = Number(selectedDonation.serves) - Number(serves);
+
+      console.log("Updating donor_form:", {
+        id: selectedDonation.id,
+        currentServes: selectedDonation.serves,
+        requestedServes: serves,
+        newServesCount: newServesCount,
+      });
+
+      const { error: updateError } = await supabase
+        .from("donor_form")
+        .update({ serves: newServesCount })
+        .eq("id", selectedDonation.id);
+
+      if (updateError) {
+        console.error("Update error:", updateError);
+        throw new Error(`Update failed: ${updateError.message}`);
+      }
+
+      toast("Success", {
+        description: "The order was placed successfully",
+      });
+      console.log("Order placed successfully!");
+      setIsOpen(false);
+    } catch (error: any) {
+      console.error("Error in onOrderPlaced:", error);
+      toast("Fail", {
+        description: `Error placing order: ${error.message}`,
+      });
+    }
+  };
+  function onServeValueChange(value: any) {
+    if (Number(value) > Number(selectedDonation?.serves)) {
+      console.log("here1");
       setServes(selectedDonation?.serves as any);
-    }
-    else{
+    } else {
       console.log("here2");
-      setServes(value)
+      setServes(value);
     }
   }
-
 
   // Helper to calculate expiry date from preparation date and shelf life hours
   function getApiExpiryDate() {

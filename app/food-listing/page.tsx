@@ -516,7 +516,7 @@ export default function FoodListingPage() {
 
   return (
     <>
-      {/* <Navbar /> */}
+      <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3]">
         {/* Main Content */}
         <div className="container mx-auto px-6 py-12">

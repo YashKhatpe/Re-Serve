@@ -26,38 +26,37 @@ import { Calendar as CalendarComponent } from "@/components/ui/calender";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import GenerateReceipt from "@/components/GenerateReceipt";
+import { useAuth } from "@/context/auth-context";
 
+type DashboardData = {
+  todayTotalDonation: number;
+  noOfPeopleServedToday: number;
+  totalDonationCount: number;
+  noOfNgos: number;
+  noOfPeopleServed: number;
+};
 export default function DonorDashboard() {
   const [loading, setLoading] = useState(false);
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [openStartDate, setOpenStartDate] = useState(false);
-  const [openEndDate, setOpenEndDate] = useState(false);
-
-  // Generate Batch Receipts Function
-  const handleGenerateReceipts = async () => {
-    if (!startDate || !endDate) {
-      alert("Please select both start and end dates");
-      return;
+  const [data, setData] = useState<DashboardData | null>(null);
+  const { user } = useAuth();
+  const donorId = user?.id;
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch(
+          `/api/donor-dashboard-data?donor_id=${donorId}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch");
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-
-    setLoading(true);
-    try {
-      // Format dates for API call: YYYY-MM-DD
-      const formattedStartDate = format(startDate, "yyyy-MM-dd");
-      const formattedEndDate = format(endDate, "yyyy-MM-dd");
-
-      // Open in new tab to download ZIP file
-      window.open(
-        `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
-        "_blank"
-      );
-    } catch (error) {
-      console.error("Error generating receipts:", error);
-      alert("Failed to generate tax receipts. Please try again.");
-    }
-    setLoading(false);
-  };
+    fetchData();
+  }, [donorId]);
 
   // Generate Last Month's Receipts (Quick Access)
   const handleGenerateLastMonth = async () => {
@@ -146,7 +145,7 @@ export default function DonorDashboard() {
           icon={<DollarSign className="h-5 w-5 text-white" />}
           iconBg="bg-orange-500"
           title="Total Today's Donation"
-          value="Rs. 1000"
+          value={loading ? "..." : `Rs. ${data?.todayTotalDonation ?? 0}`}
           change="+4.5% "
           trend="up"
         />
@@ -154,15 +153,15 @@ export default function DonorDashboard() {
           icon={<ShoppingCart className="h-5 w-5 text-white" />}
           iconBg="bg-orange-400"
           title="Total Donations"
-          value="300"
+          value={loading ? "..." : `${data?.totalDonationCount ?? 0}`}
           change="-1.5% "
           trend="down"
         />
         <StatsCard
           icon={<Package className="h-5 w-5 text-white" />}
           iconBg="bg-orange-300"
-          title="Number of Donors"
-          value="5"
+          title="Number of Ngos"
+          value={loading ? "..." : `${data?.noOfNgos ?? 0}`}
           change="+2.5% "
           trend="up"
         />
@@ -170,7 +169,7 @@ export default function DonorDashboard() {
           icon={<Users className="h-5 w-5 text-white" />}
           iconBg="bg-orange-600"
           title="Number of people served"
-          value="350"
+          value={loading ? "..." : `${data?.noOfPeopleServed ?? 0}`}
           change="+0.5% "
           trend="up"
         />
