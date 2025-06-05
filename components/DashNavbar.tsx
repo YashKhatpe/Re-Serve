@@ -8,7 +8,7 @@ export function DashNavbar() {
   const { userType, loading } = useAuth();
 
   return (
-    <nav className="w-full sticky top-0 left-0 z-20 flex items-center justify-between h-20 px-6">
+    <nav className="w-full sticky top-0 left-0 z-20 flex items-center justify-between h-20 px-6 bg-[rgb(249,250,251,1)]">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
