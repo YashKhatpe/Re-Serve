@@ -69,7 +69,7 @@ export default function GenerateReceipt() {
                     {startDate ? format(startDate, "PPP") : "Select date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="rounded-md border w-full min-w-[320px] sm:min-w-[360px]">
                   <CalendarComponent
                     mode="single"
                     selected={startDate}
