@@ -60,59 +60,25 @@ export default function ProductDetailPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!selectedDonation) {
-      router.push("/food-listing");
-      return;
-    }
-    // Calculate hours since preparation
-    const prepTime = new Date(selectedDonation.preparation_date_time);
-    const now = new Date();
-    const hoursSincePrepared = Math.floor(
-      (now.getTime() - prepTime.getTime()) / (1000 * 60 * 60)
-    );
-
-    // Map storage type to API expected values
-    const storageTypeMap: Record<string, string> = {
-      room_temp: "Room Temp",
-      "Room Temp": "Room Temp",
-      refrigerated: "Refrigerated",
-      fridge: "Refrigerated",
-      Refrigerated: "Refrigerated",
-      frozen: "Frozen",
-      freezer: "Frozen",
-      Frozen: "Frozen",
-    };
-    const apiStorageType =
-      storageTypeMap[selectedDonation.storage] || selectedDonation.storage;
-
-    const apiPayload = {
-      foodName: selectedDonation.food_name,
-      storageType: apiStorageType,
-      hoursSincePrepared,
-    };
-    console.log("Sending to Food Safety API:", apiPayload);
-    setLoadingSafety(true);
-    setSafetyError("");
-    fetch("https://expiry-prediction.onrender.com/api/food-safety", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(apiPayload),
-    })
-      .then(async (res) => {
-        const text = await res.text();
-        console.log("API response status:", res.status);
-        console.log("API response text:", text);
-        if (!res.ok) throw new Error(text);
-        return JSON.parse(text);
-      })
-      .then((data) => setFoodSafetyInfo(data))
-      .catch((err) => {
+    if (!selectedDonation) return;
+    async function fetchFoodSafetyInfo() {
+      const { data, error } = await supabase
+        .from("donor_form")
+        .select(
+          "food_safety_info, preparation_date_time, expiry_date_time, food_name, food_image, food_type, serves, storage, preferred_pickup_time, donor_id, created_at"
+        )
+        .eq("id", selectedDonation.id)
+        .single();
+      if (error) {
+        setSafetyError("Could not fetch food safety info. " + error.message);
         setFoodSafetyInfo(null);
-        setSafetyError("Could not fetch food safety info. " + err.message);
-        console.error("Food Safety API error:", err);
-      })
-      .finally(() => setLoadingSafety(false));
-  }, [selectedDonation, router]);
+      } else {
+        setFoodSafetyInfo(data?.food_safety_info || null);
+      }
+      setLoadingSafety(false);
+    }
+    fetchFoodSafetyInfo();
+  }, [selectedDonation]);
 
   // Real-time countdown for expiry
   useEffect(() => {

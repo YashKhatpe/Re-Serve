@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+
 interface DonationFormProps {
   formData: {
     foodName: string;
@@ -31,6 +33,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
 }) => {
   const router = useRouter();
   const { user } = useAuth();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
@@ -75,23 +78,81 @@ const DonationForm: React.FC<DonationFormProps> = ({
         foodImageUrl = publicUrlData.publicUrl;
       }
 
+      // 1. Call Food Safety API
+      // Calculate hours since prepared
+      let hoursSincePrepared = 0;
+      if (formData.preparationDate) {
+        const prepDate = new Date(formData.preparationDate);
+        const now = new Date();
+        hoursSincePrepared = Math.floor(
+          (now.getTime() - prepDate.getTime()) / (1000 * 60 * 60)
+        );
+      }
+      let foodSafetyInfo = null;
+      try {
+        // Debug: log value and type
+        console.log(
+          "food_name value:",
+          formData.foodName,
+          typeof formData.foodName
+        );
+        // Try both snake_case and camelCase for debugging
+        const apiPayload = {
+          food_name: formData.foodName,
+          foodName: formData.foodName,
+          storage_type: formData.storageType,
+          hours_since_prepared: hoursSincePrepared,
+        };
+        console.log("Food Safety API payload:", apiPayload);
+        const apiRes = await axios.post(
+          "https://expiry-prediction.onrender.com/api/food-safety",
+          apiPayload,
+          { headers: { "Content-Type": "application/json" } }
+        );
+        console.log("Food Safety API response:", apiRes.data);
+        foodSafetyInfo = apiRes.data;
+      } catch (err) {
+        // Type guard for AxiosError
+        if (axios.isAxiosError(err) && err.response) {
+          console.error(
+            "Food Safety API error:",
+            err.response.status,
+            err.response.data
+          );
+        } else {
+          console.error("Food Safety API error:", err);
+        }
+        foodSafetyInfo = null;
+      }
+      console.log(
+        "After Food Safety API call, foodSafetyInfo:",
+        foodSafetyInfo
+      );
+
+      // 2. Insert into Supabase with food_safety_info
       const uniqueId = uuidv4();
-      const { error } = await supabase.from("donor_form").insert({
+      const insertPayload = {
         id: uniqueId,
         food_name: formData.foodName,
         food_image: foodImageUrl,
         preparation_date_time: new Date(formData.preparationDate).toISOString(),
         expiry_date_time: new Date(formData.expiryDate).toISOString(),
         food_type: formData.foodType,
-        serves: formData.servings,
+        serves: Number(formData.servings), // Ensure this is a number
         storage: formData.storageType,
         preferred_pickup_time: formData.pickupTime,
         donor_id: user.id,
-        // additional_notes: data.additional_notes || null,
         created_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
+        food_safety_info: foodSafetyInfo,
+      };
+      console.log("Supabase insert payload:", insertPayload);
+      const { error } = await supabase.from("donor_form").insert(insertPayload);
+      if (error)
+        console.error(
+          "Supabase insert error:",
+          error,
+          JSON.stringify(error, null, 2)
+        );
 
       toast("Donation Created", {
         description: "Your food donation has been listed successfully.",
@@ -104,73 +165,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
           error.message || "Could not create your donation. Please try again.",
       });
     }
-    // finally {
-    //   setIsLoading(false);
-    // }
   };
-
-  // async function onSubmit(data: z.infer<typeof donationFormSchema>) {
-
-  //   try {
-  //     setIsLoading(true);
-  //     let foodImageUrl = null;
-
-  //     // Upload image to Supabase Storage if a file is selected
-
-  //     const file = data.food_image;
-  //     const fileExt = file.name.split(".").pop();
-  //     const fileName = `${uuidv4()}.${fileExt}`;
-  //     const filePath = `${fileName}`;
-
-  //     const { error: uploadError } = await supabase.storage
-  //       .from("food_image")
-  //       .upload(fileName, file, { cacheControl: "3600", upsert: false });
-
-  //     if (uploadError) throw uploadError;
-
-  //     // Get the public URL for the uploaded file
-  //     const { data: publicUrlData } = supabase.storage
-  //       .from("food_image")
-  //       .getPublicUrl(fileName);
-
-  //     if (publicUrlData) {
-  //       foodImageUrl = publicUrlData.publicUrl;
-  //     }
-
-  //     const uniqueId = uuidv4();
-  //     const { error } = await supabase.from("donor_form").insert({
-  //       id: uniqueId,
-  //       food_name: data.food_name,
-  //       food_image: foodImageUrl,
-  //       preparation_date_time: new Date(
-  //         data.preparation_date_time
-  //       ).toISOString(),
-  //       expiry_date_time: new Date(data.expiry_date_time).toISOString(),
-  //       food_type: data.food_type,
-  //       serves: data.serves,
-  //       storage: data.storage,
-  //       preferred_pickup_time: data.preferred_pickup_time,
-  //       donor_id: userId,
-  //       // additional_notes: data.additional_notes || null,
-  //       created_at: new Date().toISOString(),
-  //     });
-
-  //     if (error) throw error;
-
-  //     toast("Donation Created", {
-  //       description: "Your food donation has been listed successfully.",
-  //     });
-
-  //     router.push("/dashboard");
-  //   } catch (error: any) {
-  //     toast("Error Creating Donation", {
-  //       description:
-  //         error.message || "Could not create your donation. Please try again.",
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
