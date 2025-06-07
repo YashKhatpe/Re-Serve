@@ -52,8 +52,8 @@ const Donate = () => {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 py-8">
-        <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+      <div className="container mx-auto px-4 md:px-8 lg:px-16 py-8 h-[calc(100vh-4rem)]">
+        <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto h-full">
           {/* Left Side - Donation Form */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -73,15 +73,17 @@ const Donate = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="hidden lg:block flex-1 lg:max-w-md"
+            className="hidden lg:block flex-1 lg:max-w-md h-full"
           >
-            <ChatAssistant
-              formData={formData}
-              updateFormField={updateFormField}
-              updateImageField={updateImageField}
-              isOpen={true}
-              onToggle={() => {}}
-            />
+            <div className="h-full">
+              <ChatAssistant
+                formData={formData}
+                updateFormField={updateFormField}
+                updateImageField={updateImageField}
+                isOpen={true}
+                onToggle={() => {}}
+              />
+            </div>
           </motion.div>
 
           {/* Mobile Chat Button */}

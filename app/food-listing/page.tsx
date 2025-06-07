@@ -381,7 +381,7 @@ export default function FoodListingPage() {
           const filters = await sendTextToGemini(result.transcript);
           const data = await queryDonorForm(filters); // parsed from Gemini
           const enriched = await enrichDonationData(data);
-          setDonations(enriched);
+          // setDonations(enriched);
           setFilteredDonations(enriched);
 
           // setFilteredDonations(data);
@@ -396,48 +396,48 @@ export default function FoodListingPage() {
     }
   };
 
-
   async function enrichDonationData(donationsRaw: Donation[]) {
-  const enriched: Donation[] = [];
+    const enriched: Donation[] = [];
 
-  for (let donation of donationsRaw) {
-    let latLng = { lat: 0, lng: 0 };
+    for (let donation of donationsRaw) {
+      let latLng = { lat: 0, lng: 0 };
 
-    const { data: donorData, error: donorError } = await supabase
-      .from("donor")
-      .select("address_map_link")
-      .eq("id", donation.donor_id)
-      .single();
+      const { data: donorData, error: donorError } = await supabase
+        .from("donor")
+        .select("address_map_link")
+        .eq("id", donation.donor_id)
+        .single();
 
-    if (donorData?.address_map_link) {
-      const locationResult = extractLocationFromMapUrl(donorData.address_map_link);
-      if (locationResult.location) {
-        latLng = locationResult.location;
+      if (donorData?.address_map_link) {
+        const locationResult = extractLocationFromMapUrl(
+          donorData.address_map_link
+        );
+        if (locationResult.location) {
+          latLng = locationResult.location;
+        }
       }
+
+      let distance = 0;
+      if (userLocation && latLng.lat && latLng.lng) {
+        distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          latLng.lat,
+          latLng.lng
+        );
+      }
+
+      enriched.push({
+        ...donation,
+        location: latLng,
+        distance,
+      });
     }
 
-    let distance = 0;
-    if (userLocation && latLng.lat && latLng.lng) {
-      distance = calculateDistance(
-        userLocation.lat,
-        userLocation.lng,
-        latLng.lat,
-        latLng.lng
-      );
-    }
+    enriched.sort((a, b) => a.distance - b.distance);
 
-    enriched.push({
-      ...donation,
-      location: latLng,
-      distance,
-    });
+    return enriched;
   }
-
-  enriched.sort((a, b) => a.distance - b.distance);
-
-  return enriched;
-}
-
 
   async function queryDonorForm(filters: any[]) {
     let query: any = supabase.from("donor_form").select("*");

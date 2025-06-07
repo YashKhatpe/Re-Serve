@@ -4,6 +4,7 @@ import { Mic, MicOff, X, Check, RotateCcw, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
+// import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Input } from "../ui/input";
 
 interface ChatAssistantProps {
@@ -753,8 +754,8 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
 
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Messages Area with ScrollArea */}
-        <ScrollArea className="flex-1 h-96">
-          <div className="p-4 space-y-4 bg-gray-50">
+        <ScrollArea className="flex-1 h-[calc(100vh-6rem)]">
+          <div className="flex flex-col p-4 space-y-4 bg-gray-50">
             <AnimatePresence>
               {messages.map((message) => (
                 <motion.div
