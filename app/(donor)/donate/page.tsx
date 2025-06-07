@@ -1,363 +1,137 @@
 "use client";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import DonationForm from "@/components/donate/DonationForm";
+import ChatAssistant from "@/components/donate/ChatAssistant";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Mic, Volume2 } from "lucide-react";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
-import { FOOD_PREFERENCES, STORAGE_OPTIONS } from "@/lib/constants";
-import { ArrowLeft, ImageIcon } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
-
-import { toast } from "sonner";
-
-const donationFormSchema = z.object({
-  food_name: z
-    .string()
-    .min(2, { message: "Food name must be at least 2 characters." }),
-  food_image: z.instanceof(File, { message: "Please upload a image file." }),
-  preparation_date_time: z
-    .string()
-    .min(1, { message: "Preparation date and time is required." }),
-  expiry_date_time: z
-    .string()
-    .min(1, { message: "Expiry date and time is required." }),
-  food_type: z.string().min(1, { message: "Please select a food type." }),
-  serves: z.coerce
-    .number()
-    .min(1, { message: "Number of servings must be at least 1." }),
-  storage: z.string().min(1, { message: "Please select a storage type." }),
-  preferred_pickup_time: z
-    .string()
-    .min(1, { message: "Preferred pickup time is required." }),
-  // additional_notes: z.string().optional(),
-});
-
-export default function DonatePage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function checkAuth() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-
-      setUserId(user.id);
-    }
-
-    checkAuth();
-  }, [router]);
-
-  const form = useForm<z.infer<typeof donationFormSchema>>({
-    resolver: zodResolver(donationFormSchema),
-    defaultValues: {
-      food_name: "",
-      preparation_date_time: "",
-      expiry_date_time: "",
-      food_type: "",
-      serves: 1,
-      storage: "",
-      preferred_pickup_time: "",
-      // additional_notes: "",
-    },
+const Donate = () => {
+  const [formData, setFormData] = useState({
+    foodName: "",
+    foodImage: null,
+    preparationDate: "",
+    expiryDate: "",
+    foodType: "",
+    storageType: "",
+    servings: "",
+    pickupTime: "",
   });
 
-  async function onSubmit(data: z.infer<typeof donationFormSchema>) {
-    console.log(data);
-    if (!userId) {
-      toast("Auth Error", {
-        description: "You must be logged in to donate food.",
-      });
-      return;
-    }
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
-    try {
-      setIsLoading(true);
-      let foodImageUrl = null;
+  const updateFormField = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
-      // Upload image to Supabase Storage if a file is selected
-
-      const file = data.food_image;
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("food_image")
-        .upload(fileName, file, { cacheControl: "3600", upsert: false });
-
-      if (uploadError) throw uploadError;
-
-      // Get the public URL for the uploaded file
-      const { data: publicUrlData } = supabase.storage
-        .from("food_image")
-        .getPublicUrl(fileName);
-
-      if (publicUrlData) {
-        foodImageUrl = publicUrlData.publicUrl;
-      }
-
-      const uniqueId = uuidv4();
-      const { error } = await supabase.from("donor_form").insert({
-        id: uniqueId,
-        food_name: data.food_name,
-        food_image: foodImageUrl,
-        preparation_date_time: new Date(
-          data.preparation_date_time
-        ).toISOString(),
-        expiry_date_time: new Date(data.expiry_date_time).toISOString(),
-        food_type: data.food_type,
-        serves: data.serves,
-        storage: data.storage,
-        preferred_pickup_time: data.preferred_pickup_time,
-        donor_id: userId,
-        // additional_notes: data.additional_notes || null,
-        created_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-
-      toast("Donation Created", {
-        description: "Your food donation has been listed successfully.",
-      });
-
-      router.push("/dashboard");
-    } catch (error: any) {
-      toast("Error Creating Donation", {
-        description:
-          error.message || "Could not create your donation. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const updateImageField = (field: string, file: File | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: file,
+    }));
+  };
 
   return (
-    <div className="min-h-screen bg-secondary/30">
-      <div className="container mx-auto py-8">
-        <Button
-          variant="ghost"
-          className="flex items-center text-primary"
-          onClick={() => router.push("/dashboard")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-        </Button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 md:px-8 lg:px-16">
+          <div className="flex items-center h-16">
+            <Link
+              href="/dashboard"
+              className="flex items-center space-x-2 text-gray-600 hover:text-orange-500 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back to Dashboard</span>
+            </Link>
+          </div>
+        </div>
+      </header>
 
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle>Donate Food</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
+      {/* Main Content */}
+      <div className="container mx-auto px-4 md:px-8 lg:px-16 py-8 h-[calc(100vh-4rem)]">
+        <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto h-full">
+          {/* Left Side - Donation Form */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex-1 lg:max-w-2xl"
+          >
+            <DonationForm
+              formData={formData}
+              updateFormField={updateFormField}
+              updateImageField={updateImageField}
+            />
+          </motion.div>
+
+          {/* Right Side - Chat Assistant (Desktop) */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="hidden lg:block flex-1 lg:max-w-md h-full"
+          >
+            <div className="h-full">
+              <ChatAssistant
+                formData={formData}
+                updateFormField={updateFormField}
+                updateImageField={updateImageField}
+                isOpen={true}
+                onToggle={() => {}}
+              />
+            </div>
+          </motion.div>
+
+          {/* Mobile Chat Button */}
+          <div className="lg:hidden fixed bottom-6 right-6 z-50">
+            <button
+              onClick={() => setIsChatOpen(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-full shadow-lg transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <FormField
-                  control={form.control}
-                  name="food_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Food Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Provide a descriptive name for the food you're donating"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      {/* <Volume2 size={20} /> */}
-                    </FormItem>
-                  )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-3.774-.82L3 21l1.82-6.226A8.955 8.955 0 013 12a8 8 0 018-8c4.418 0 8 3.582 8 8z"
                 />
+              </svg>
+            </button>
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="food_image"
-                  render={({ field: { onChange } }) => (
-                    <FormItem>
-                      <FormLabel>Food Image</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => onChange(e.target.files?.[0])}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+          {/* Mobile Chat Modal */}
+          {isChatOpen && (
+            <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50">
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 500 }}
+                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl h-3/4 overflow-hidden"
+              >
+                <ChatAssistant
+                  formData={formData}
+                  updateFormField={updateFormField}
+                  updateImageField={updateImageField}
+                  isOpen={true}
+                  onToggle={() => {}}
                 />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="preparation_date_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Preparation Date & Time</FormLabel>
-                        <FormControl>
-                          <Input type="datetime-local" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="expiry_date_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Expiry Date & Time</FormLabel>
-                        <FormControl>
-                          <Input type="datetime-local" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="food_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Food Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select food type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {FOOD_PREFERENCES.map((preference) => (
-                              <SelectItem
-                                key={preference.value}
-                                value={preference.value}
-                              >
-                                {preference.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="storage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Storage Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select storage type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {STORAGE_OPTIONS.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="serves"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Number of Servings</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Approximate number of people this food can serve
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="preferred_pickup_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Preferred Pickup Time</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Today 5-7 PM" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-primary hover:bg-primary/90"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Creating Donation..." : "Create Donation"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              </motion.div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default Donate;

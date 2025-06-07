@@ -396,139 +396,122 @@ export default function ProductDetailPage() {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto px-4 py-8 mt-10">
-        <div className="flex flex-col gap-2 mb-6">
-          <Button
-            className="w-[100px] p-6 gap-2 text-gray-700 hover:text-emerald-600"
-            variant="ghost"
-            onClick={() => window.history.back()}
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back
-          </Button>
-          <div className="flex justify-between">
-            <h1 className="text-3xl font-bold">{selectedDonation.food_name}</h1>
-            <Volume2
-              className="cursor-pointer"
-              onClick={handleDictateDetails}
-            />
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="rounded-lg overflow-hidden w-full h-full relative">
-            <Image
-              src={selectedDonation.food_image}
-              alt={selectedDonation.food_name}
-              fill
-              className="object-cover"
-            />
+   <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3]">
+      <div className="container mx-auto px-6 py-12">
+        <div className="space-y-8">
+          {/* Header Section */}
+          <div className="space-y-6">
+          
+            
+            <div className="flex justify-between items-start">
+              <h1 className="text-4xl lg:text-5xl font-bold text-[#2D3748] leading-tight">
+                {selectedDonation.food_name}
+              </h1>
+              <Button
+                onClick={handleDictateDetails}
+                className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-full p-3 transition-all shadow-lg hover:shadow-xl"
+              >
+                <Volume2 className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
 
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <h2 className="text-xl font-bold">Details</h2>
-              <Separator />
-              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Pickup Location</p>
-                    <p className="text-sm text-muted-foreground">
-                      {Math.round(selectedDonation.distance * 100) / 100} km
-                      away
-                    </p>
+          {/* Main Content */}
+          <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Food Image */}
+            <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden pt-0 h-fit pb-0">
+              <div className="relative">
+                <img
+                  src={selectedDonation.food_image}
+                  alt={selectedDonation.food_name}
+                  className="w-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-[#FF6B35] text-white px-4 py-2 rounded-full text-sm font-medium">
+                  {selectedDonation.food_type}
+                </div>
+              </div>
+            </Card>
+
+            {/* Details Card */}
+            <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
+              <CardContent className="p-8 space-y-6">
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold text-[#2D3748]">Details</h2>
+                  <Separator className="bg-[#E8E5E1]" />
+                </div>
+
+                <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                      <MapPin className="w-6 h-6 text-[#FF6B35]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#2D3748]">Pickup Location</p>
+                      <p className="text-[#718096]">
+                        {Math.round(selectedDonation.distance * 100) / 100} km away
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                      <Sprout className="w-6 h-6 text-[#FF6B35]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#2D3748]">Food Type</p>
+                      <p className="text-[#718096]">{selectedDonation.food_type}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                      <Clock className="w-6 h-6 text-[#FF6B35]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#2D3748]">Pickup Time</p>
+                      <p className="text-[#718096]">{selectedDonation.preferred_pickup_time}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                      <Clock className="w-6 h-6 text-[#FF6B35]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#2D3748]">Expiry Date</p>
+                      <p className="text-[#718096]">
+                        {new Date(selectedDonation.expiry_date_time).toLocaleDateString()}{" "}
+                        {new Date(selectedDonation.expiry_date_time).toLocaleTimeString()}
+                      </p>
+                      <p className="text-sm font-semibold text-red-600">
+                        {expiryCountdown}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                      <Sprout className="w-6 h-6 text-[#FF6B35]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#2D3748]">Serves</p>
+                      <p className="text-[#718096]">{selectedDonation.serves} people</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                      <Clock className="w-6 h-6 text-[#FF6B35]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#2D3748]">Storage Type</p>
+                      <p className="text-[#718096]">{selectedDonation.storage}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Sprout className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Type</p>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedDonation.food_type}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Pickup Time</p>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedDonation.preferred_pickup_time}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Preparation Date</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(
-                        selectedDonation.preparation_date_time
-                      ).toLocaleDateString()}{" "}
-                      {new Date(
-                        selectedDonation.preparation_date_time
-                      ).toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Expiry Date</p>
-                    <p className="text-sm text-muted-foreground">
-                      {/* Use API expiry date if available, else fallback to DB */}
-                      {(() => {
-                        const apiExpiry = getApiExpiryDate();
-                        if (apiExpiry) {
-                          return (
-                            <>
-                              {apiExpiry.toLocaleDateString()}{" "}
-                              {apiExpiry.toLocaleTimeString()}
-                            </>
-                          );
-                        }
-                        return (
-                          <>
-                            {new Date(
-                              selectedDonation.expiry_date_time
-                            ).toLocaleDateString()}{" "}
-                            {new Date(
-                              selectedDonation.expiry_date_time
-                            ).toLocaleTimeString()}
-                          </>
-                        );
-                      })()}
-                    </p>
-                    <p className="text-xs text-red-600 font-semibold">
-                      {expiryCountdown}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Storage Type</p>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedDonation.storage}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Sprout className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Serves</p>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedDonation.serves}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Food Safety Info from API */}
+                {/* Food Safety Info Section */}
+                                {/* Food Safety Info from API */}
                 <div className="col-span-2">
                   <Separator />
                   <h3 className="font-semibold mt-2">Food Safety Info</h3>
@@ -579,40 +562,46 @@ export default function ProductDetailPage() {
                     <p>No food safety info available.</p>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Request Button */}
+          <div className="flex items-center justify-center pt-8">
+            {isExpired ? (
+              <div className="text-center p-6 bg-red-50 rounded-3xl border border-red-200">
+                <p className="text-red-600 font-semibold text-lg">
+                  This food has expired and cannot be requested.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <Button
+                className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-2xl px-12 py-6 text-lg font-semibold transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+                onClick={() => {
+                  setIsOpen(true);
+                  generateOTP();
+                }}
+              >
+                Request Food
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="mt-8 flex items-center justify-center">
-          {isExpired ? (
-            <div className="text-red-600 font-semibold text-lg">
-              This food has expired and cannot be requested.
-            </div>
-          ) : (
-            <Button
-              variant="default"
-              className="bg-emerald-600 hover:bg-emerald-700 p-6 cursor-pointer"
-              onClick={() => {
-                setIsOpen(true);
-                generateOTP();
-              }}
-            >
-              Request Food
-            </Button>
-          )}
-        </div>
-
+        {/* Request Dialog */}
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="p-6 rounded-xl shadow-xl border bg-white">
+          <DialogContent className="bg-white/95 backdrop-blur-sm border-[#E8E5E1] rounded-3xl shadow-2xl max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-center">
+              <DialogTitle className="text-2xl font-bold text-[#2D3748] text-center">
                 Request Food
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-5 mt-3">
-              <div className="flex flex-col space-y-2">
-                <Label htmlFor="serves">Number of Serves</Label>
+            
+            <div className="space-y-6 p-2">
+              <div className="space-y-3">
+                <Label htmlFor="serves" className="text-[#4A5568] font-medium">
+                  Number of Serves
+                </Label>
                 <Input
                   id="serves"
                   max={selectedDonation.serves}
@@ -621,11 +610,12 @@ export default function ProductDetailPage() {
                   value={serves}
                   onChange={(e) => onServeValueChange(e.target.value)}
                   placeholder="Enter number of serves"
-                  className="w-full"
+                  className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
                 />
               </div>
-              <div className="flex flex-col space-y-2">
-                <Label htmlFor="delivery_person_name">
+              
+              <div className="space-y-3">
+                <Label htmlFor="delivery_person_name" className="text-[#4A5568] font-medium">
                   Delivery Person Name
                 </Label>
                 <Input
@@ -634,47 +624,46 @@ export default function ProductDetailPage() {
                   value={delivery_person_name}
                   onChange={(e) => setDeliveryPersonName(e.target.value)}
                   placeholder="Enter name of delivery person"
-                  className="w-full"
+                  className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
                 />
               </div>
-              <div className="flex flex-col space-y-2">
-                <Label htmlFor="delivery_person_phone_no">
-                  Number of Delivery Person
+              
+              <div className="space-y-3">
+                <Label htmlFor="delivery_person_phone_no" className="text-[#4A5568] font-medium">
+                  Delivery Person Phone
                 </Label>
                 <Input
                   id="delivery_person_phone_no"
                   type="tel"
                   value={delivery_person_phone_no}
                   onChange={(e) => setDeliveryPersonPhoneNo(e.target.value)}
-                  placeholder="Enter number of serves"
-                  className="w-full"
+                  placeholder="Enter phone number"
+                  className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
                 />
               </div>
-              <div className=" hidden">
-                <Label htmlFor="otp">OTP</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="otp"
-                    type="text"
-                    value={otp}
-                    disabled
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter OTP"
-                    className="w-full"
-                  />
-                  {/* <Button type="button" onClick={generateOTP} className="bg-blue-500">
-                                        Generate OTP
-                                    </Button> */}
-                </div>
+              
+              <div className="hidden">
+                <Input
+                  type="text"
+                  value={otp}
+                  disabled
+                  onChange={(e) => setOtp(e.target.value)}
+                />
               </div>
             </div>
-            <div className="flex justify-center gap-4 mt-6">
+            
+            <div className="flex justify-center gap-4 pt-4">
               <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
+                <Button 
+                  variant="outline" 
+                  className="border-[#E8E5E1] text-[#4A5568] hover:bg-[#F5F3F0] rounded-xl px-6 py-3"
+                >
+                  Cancel
+                </Button>
               </DialogClose>
               <Button
                 onClick={onOrderPlaced}
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl px-6 py-3 font-medium transition-all shadow-lg hover:shadow-xl"
               >
                 Submit Request
               </Button>
@@ -682,6 +671,7 @@ export default function ProductDetailPage() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
     </>
   );
 }
