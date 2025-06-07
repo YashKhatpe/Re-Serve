@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Receipt, ShoppingCart, Building } from "lucide-react";
+import { LayoutDashboard, Receipt, ShoppingCart, Building, Badge, Award } from "lucide-react";
 import { SheetTitle } from "../ui/sheet";
 
 const items = [
@@ -30,6 +30,12 @@ const items = [
     icon: ShoppingCart,
     componentId: "orders",
   },
+  {
+    title: "Badges",
+    url: "/badges",
+    icon: Award,
+    componentId: "badges",
+  }
 ];
 
 interface AppSidebarProps {

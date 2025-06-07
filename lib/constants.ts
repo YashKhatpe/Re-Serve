@@ -1,6 +1,6 @@
 export const FOOD_PREFERENCES = [
-  { value: 'veg', label: 'Vegetarian' },
-  { value: 'non-veg', label: 'Non-Vegetarian' },
+  { value: 'veg', label: 'Veg' },
+  { value: 'non-veg', label: 'Non-Veg' },
   { value: 'jain', label: 'Jain' },
 ];
 

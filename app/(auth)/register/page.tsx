@@ -300,7 +300,7 @@ export default function RegisterPage() {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm border border-[#E8E5E1] rounded-2xl">
+              <TabsList className="grid w-full grid-cols-2 bg-white/80 backdrop-blur-sm border border-[#E8E5E1] rounded-2xl">
                 <TabsTrigger 
                   value="donor"
                   className="rounded-xl data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
@@ -318,7 +318,7 @@ export default function RegisterPage() {
               {/* Donor Form */}
               <TabsContent value="donor">
                 <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
-                  <CardHeader className="pb-4">
+                  <CardHeader className="">
                     <CardTitle className="text-2xl font-bold text-[#2D3748] text-center">
                       Register as a Food Donor
                     </CardTitle>
@@ -386,23 +386,29 @@ export default function RegisterPage() {
                           />
                         </div>
 
-                        <FormField
-                          control={donorForm.control}
-                          name="fssai_license"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">FSSAI License Number</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter FSSAI Registration Number"
-                                  {...field}
-                                  className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+<FormField
+  control={donorForm.control}
+  name="fssai_license"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-[#4A5568] font-medium">
+        FSSAI License Number
+      </FormLabel>
+      <FormControl>
+        <Input
+          placeholder="e.g., 12345678901234"
+          {...field}
+          className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
+        />
+      </FormControl>
+      <p className="text-xs text-gray-500 mt-1">
+        Example: 12345678901234 (14-digit number issued by FSSAI)
+      </p>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
 
                         <FormField
                           control={donorForm.control}
@@ -429,7 +435,7 @@ export default function RegisterPage() {
                             <FormItem>
                               <FormLabel className="text-[#4A5568] font-medium">Food Preference</FormLabel>
                               <FormControl>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-3">
                                   {FOOD_PREFERENCES.map((preference) => (
                                     <div
                                       key={preference.value}
@@ -519,7 +525,7 @@ export default function RegisterPage() {
               {/* NGO Form */}
               <TabsContent value="ngo">
                 <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
-                  <CardHeader className="pb-4">
+                  <CardHeader className="">
                     <CardTitle className="text-2xl font-bold text-[#2D3748] text-center">
                       Register as an NGO
                     </CardTitle>
@@ -548,7 +554,6 @@ export default function RegisterPage() {
                           )}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <FormField
                             control={ngoForm.control}
                             name="reg_no"
@@ -572,19 +577,24 @@ export default function RegisterPage() {
                             name="fcra_reg_no"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">FCRA Registration Number</FormLabel>
+                                <FormLabel className="text-[#4A5568] font-medium">
+                                  FCRA Registration Number
+                                </FormLabel>
                                 <FormControl>
                                   <Input
-                                    placeholder="Enter FCRA registration number"
+                                    placeholder="e.g., 23165012345678"
                                     {...field}
                                     className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
                                   />
                                 </FormControl>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Example: 23165012345678 (As issued by the Ministry of Home Affairs)
+                                </p>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                        </div>
+
 
                         <FormField
                           control={ngoForm.control}
@@ -647,7 +657,7 @@ export default function RegisterPage() {
                             <FormItem>
                               <FormLabel className="text-[#4A5568] font-medium">Food Preference</FormLabel>
                               <FormControl>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-3">
                                   {FOOD_PREFERENCES.map((preference) => (
                                     <div
                                       key={preference.value}
