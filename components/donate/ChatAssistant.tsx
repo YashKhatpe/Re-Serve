@@ -754,7 +754,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
 
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Messages Area with ScrollArea */}
-        <ScrollArea className="flex-1 h-[calc(100vh-6rem)]">
+        <ScrollArea className="flex-1 max-h-[calc(100vh-20rem)]">
           <div className="flex flex-col p-4 space-y-4 bg-gray-50">
             <AnimatePresence>
               {messages.map((message) => (
