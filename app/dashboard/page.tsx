@@ -12,6 +12,8 @@ import { useIsMobile } from "@/lib/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import GenerateReceipt from "@/components/GenerateReceipt";
+import Badges from "@/components/Badges";
+
 
 export default function Dashboard() {
   const { userType } = useAuth();
@@ -58,7 +60,7 @@ export default function Dashboard() {
             )}
             {activeComponent === "generate-receipt" && <GenerateReceipt />}
             {activeComponent === "orders" && <DashOrderDetails />}
-            {/* Add other components based on activeComponent state */}
+            {activeComponent === "badges" && userType === "donor" && <Badges />}
           </div>
         </main>
       </div>
