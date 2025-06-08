@@ -58,7 +58,9 @@ export default function Dashboard() {
             {activeComponent === "dashboard" && userType === "ngo" && (
               <NgoDashboard />
             )}
-            {activeComponent === "generate-receipt" && <GenerateReceipt />}
+            {activeComponent === "generate-receipt" && userType === "donor" && (
+              <GenerateReceipt />
+            )}
             {activeComponent === "orders" && <DashOrderDetails />}
             {activeComponent === "badges" && userType === "donor" && <Badges />}
             {activeComponent === "receipts" && <ReceiptHistory />}
