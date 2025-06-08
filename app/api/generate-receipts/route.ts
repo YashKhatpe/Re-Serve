@@ -312,6 +312,40 @@ export async function GET(request: Request) {
           const fileName = `donation_receipt_${receiptNumber}.pdf`;
           zip.file(fileName, pdfBuffer);
           console.log(`Added PDF receipt to zip file: ${fileName}`);
+
+          // --- NEW: Upload PDF to Supabase Storage ---
+          const storageFileName = `receipt_${order.id}.pdf`;
+          const { error: uploadError } = await supabase.storage
+            .from("receipts")
+            .upload(storageFileName, Buffer.from(pdfBuffer), {
+              contentType: "application/pdf",
+              upsert: true,
+            });
+          if (uploadError) {
+            console.error(
+              `Failed to upload PDF for order ${order.id}:`,
+              uploadError
+            );
+            continue; // skip to next order
+          }
+          // Get the public URL
+          const { data: publicUrlData } = supabase.storage
+            .from("receipts")
+            .getPublicUrl(storageFileName);
+          const pdfUrl = publicUrlData?.publicUrl;
+
+          // --- NEW: Upsert into receipts table ---
+          await supabase.from("receipts").upsert(
+            {
+              order_id: order.id,
+              receipt_number: receiptNumber,
+              receipt_type: "batch",
+              batch_id: batchId,
+              amount: donationAmount,
+              pdf_url: pdfUrl,
+            },
+            { onConflict: "order_id" }
+          );
         } catch (err) {
           console.error(`Error generating receipt for order ${order.id}:`, err);
           if (err instanceof Error) {

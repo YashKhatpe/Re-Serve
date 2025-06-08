@@ -12,6 +12,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calender";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import ReceiptHistory from "./dashboard/ReceiptHistory";
 
 export default function GenerateReceipt() {
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,7 @@ export default function GenerateReceipt() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [openStartDate, setOpenStartDate] = useState(false);
   const [openEndDate, setOpenEndDate] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const handleGenerateReceipts = async () => {
     if (!startDate || !endDate) {
@@ -53,74 +55,94 @@ export default function GenerateReceipt() {
           <CardTitle className="text-lg font-medium text-orange-600">
             Generate Tax Deduction Receipts
           </CardTitle>
+          <div className="flex gap-2 mt-2">
+            <Button
+              variant={showHistory ? "outline" : "default"}
+              className={showHistory ? "" : "bg-orange-500 text-white"}
+              onClick={() => setShowHistory(false)}
+            >
+              Generate Receipt
+            </Button>
+            <Button
+              variant={showHistory ? "default" : "outline"}
+              className={showHistory ? "bg-orange-500 text-white" : ""}
+              onClick={() => setShowHistory(true)}
+            >
+              Receipt History
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap items-stretch sm:items-end">
-            {/* Start Date Picker */}
-            <div className="flex flex-col gap-2 w-full sm:w-[240px]">
-              <label className="text-sm font-medium">Start Date</label>
-              <Popover open={openStartDate} onOpenChange={setOpenStartDate}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="rounded-md border w-full min-w-[320px] sm:min-w-[360px]">
-                  <CalendarComponent
-                    mode="single"
-                    selected={startDate}
-                    onSelect={(date) => {
-                      setStartDate(date);
-                      setOpenStartDate(false);
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+          {showHistory ? (
+            <ReceiptHistory />
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap items-stretch sm:items-end">
+              {/* Start Date Picker */}
+              <div className="flex flex-col gap-2 w-full sm:w-[240px]">
+                <label className="text-sm font-medium">Start Date</label>
+                <Popover open={openStartDate} onOpenChange={setOpenStartDate}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="rounded-md border w-full min-w-[320px] sm:min-w-[360px]">
+                    <CalendarComponent
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        setStartDate(date);
+                        setOpenStartDate(false);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            {/* End Date Picker */}
-            <div className="flex flex-col gap-2 w-full sm:w-[240px]">
-              <label className="text-sm font-medium">End Date</label>
-              <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <CalendarComponent
-                    mode="single"
-                    selected={endDate}
-                    onSelect={(date) => {
-                      setEndDate(date);
-                      setOpenEndDate(false);
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+              {/* End Date Picker */}
+              <div className="flex flex-col gap-2 w-full sm:w-[240px]">
+                <label className="text-sm font-medium">End Date</label>
+                <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal border-orange-200 text-orange-600 hover:bg-orange-50"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => {
+                        setEndDate(date);
+                        setOpenEndDate(false);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            {/* Generate Button */}
-            <div className="w-full sm:w-auto">
-              <Button
-                onClick={handleGenerateReceipts}
-                className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto"
-                disabled={loading}
-              >
-                {loading ? "Generating..." : "Generate Receipts"}
-              </Button>
+              {/* Generate Button */}
+              <div className="w-full sm:w-auto">
+                <Button
+                  onClick={handleGenerateReceipts}
+                  className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto"
+                  disabled={loading}
+                >
+                  {loading ? "Generating..." : "Generate Receipts"}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

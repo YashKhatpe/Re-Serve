@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import GenerateReceipt from "@/components/GenerateReceipt";
 import Badges from "@/components/Badges";
-
+import ReceiptHistory from "@/components/dashboard/ReceiptHistory";
 
 export default function Dashboard() {
   const { userType } = useAuth();
@@ -61,6 +61,7 @@ export default function Dashboard() {
             {activeComponent === "generate-receipt" && <GenerateReceipt />}
             {activeComponent === "orders" && <DashOrderDetails />}
             {activeComponent === "badges" && userType === "donor" && <Badges />}
+            {activeComponent === "receipts" && <ReceiptHistory />}
           </div>
         </main>
       </div>
