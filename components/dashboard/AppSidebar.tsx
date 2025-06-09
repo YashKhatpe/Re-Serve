@@ -8,41 +8,44 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Receipt, ShoppingCart, Building, Badge, Award } from "lucide-react";
-import { SheetTitle } from "../ui/sheet";
-
-const items = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-    componentId: "dashboard",
-  },
-  {
-    title: "Generate Receipt",
-    url: "/generate-receipt",
-    icon: Receipt,
-    componentId: "generate-receipt",
-  },
-  {
-    title: "Orders",
-    url: "/orders",
-    icon: ShoppingCart,
-    componentId: "orders",
-  },
-  {
-    title: "Badges",
-    url: "/badges",
-    icon: Award,
-    componentId: "badges",
-  }
-];
+import { LayoutDashboard, Receipt, ShoppingCart, Award } from "lucide-react";
 
 interface AppSidebarProps {
   setActiveComponent: (component: string) => void;
   userType: "donor" | "ngo" | null;
 }
 export function AppSidebar({ setActiveComponent, userType }: AppSidebarProps) {
+  const items = [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+      componentId: "dashboard",
+    },
+    userType == "donor" && {
+      title: "Generate Receipt",
+      url: "/generate-receipt",
+      icon: Receipt,
+      componentId: "generate-receipt",
+    },
+    {
+      title: "Orders",
+      url: "/orders",
+      icon: ShoppingCart,
+      componentId: "orders",
+    },
+    {
+      title: "Badges",
+      url: "/badges",
+      icon: Award,
+      componentId: "badges",
+    },
+  ].filter(Boolean) as {
+    title: string;
+    url: string;
+    icon: React.ElementType;
+    componentId: string;
+  }[];
   return (
     <Sidebar className="bg-white border-r border-orange-100 pt-20">
       <SidebarContent>

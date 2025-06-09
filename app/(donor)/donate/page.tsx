@@ -5,6 +5,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import DonationForm from "@/components/donate/DonationForm";
 import ChatAssistant from "@/components/donate/ChatAssistant";
+import { Navbar } from "@/components/Navbar";
+import { DashNavbar } from "@/components/DashNavbar";
 
 const Donate = () => {
   const [formData, setFormData] = useState({
@@ -37,7 +39,7 @@ const Donate = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      {/* <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 md:px-8 lg:px-16">
           <div className="flex items-center h-16">
             <Link
@@ -49,7 +51,8 @@ const Donate = () => {
             </Link>
           </div>
         </div>
-      </header>
+      </header> */}
+      <DashNavbar />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 md:px-8 lg:px-16 py-8 h-[calc(100vh-4rem)]">

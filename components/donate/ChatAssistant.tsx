@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 // import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Input } from "../ui/input";
+import { v4 as uuidv4 } from "uuid";
 
 interface ChatAssistantProps {
   formData: any;
@@ -52,11 +53,11 @@ const questions = [
     question: "When was this food prepared? Please select the date and time.",
     showCalendar: true,
   },
-  {
-    field: "expiryDate",
-    question: "When does this food expire? Please select the date and time.",
-    showCalendar: true,
-  },
+  // {
+  //   field: "expiryDate",
+  //   question: "When does this food expire? Please select the date and time.",
+  //   showCalendar: true,
+  // },
   {
     field: "storageType",
     question: "How should this food be stored?",
@@ -164,7 +165,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
       const completionMessage =
         "Perfect! I've helped you fill out all the details for your food donation. You can now review the form and submit your donation. Thank you for helping fight food waste!";
       await typeMessage(completionMessage, true);
-      speakText(completionMessage);
+      // speakText(completionMessage);
       return;
     }
 
@@ -192,7 +193,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
       question.field
     );
     setIsTyping(false);
-    speakText(question.question);
+    // speakText(question.question);
 
     if (question.showOptions) {
       setWaitingForSelection(true);
@@ -294,7 +295,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
   ): Promise<void> => {
     return new Promise((resolve) => {
       const newMessage: Message = {
-        id: Date.now().toString(),
+        id: uuidv4(),
         text: "",
         isBot,
         timestamp: new Date(),
@@ -325,31 +326,31 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
     });
   };
 
-  const speakText = async (text: string) => {
-    try {
-      const response = await fetch("/api/text-to-speech", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text }),
-      });
+  // const speakText = async (text: string) => {
+  //   try {
+  //     const response = await fetch("/api/text-to-speech", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ text }),
+  //     });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate speech");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Failed to generate speech");
+  //     }
 
-      const data = await response.json();
-      const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
-      const audio = new Audio(audioSrc);
-      await new Promise<void>((resolve) => {
-        audio.onended = () => resolve();
-        audio.play();
-      });
-    } catch (error) {
-      console.error("Error with text-to-speech:", error);
-    }
-  };
+  //     const data = await response.json();
+  //     const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
+  //     const audio = new Audio(audioSrc);
+  //     await new Promise<void>((resolve) => {
+  //       audio.onended = () => resolve();
+  //       audio.play();
+  //     });
+  //   } catch (error) {
+  //     console.error("Error with text-to-speech:", error);
+  //   }
+  // };
 
   const startRecording = async (): Promise<void> => {
     try {
@@ -504,7 +505,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
       isConfirmation: true,
     };
     setMessages((prev) => [...prev, confirmationMessageObj]);
-    speakText(confirmationMessage);
+    // speakText(confirmationMessage);
   };
 
   const handleOptionSelection = async (value: string) => {
@@ -613,7 +614,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
       await new Promise((resolve) => setTimeout(resolve, 500));
       const retryMessage = "Let me ask the question again.";
       await typeMessage(retryMessage, true);
-      speakText(retryMessage);
+      // speakText(retryMessage);
 
       setTimeout(() => {
         askQuestion(currentQuestionIndex);
@@ -631,7 +632,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
         await new Promise((resolve) => setTimeout(resolve, 500));
         const invalidMessage = `Sorry, I didn't understand that option. ${currentQuestion.question}`;
         await typeMessage(invalidMessage, true);
-        speakText(invalidMessage);
+        // speakText(invalidMessage);
         return;
       }
 

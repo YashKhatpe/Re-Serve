@@ -16,7 +16,7 @@ interface DonationFormProps {
     foodName: string;
     foodImage: File | null;
     preparationDate: string;
-    expiryDate: string;
+    // expiryDate: string;
     foodType: string;
     storageType: string;
     servings: string;
@@ -136,7 +136,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
         food_name: formData.foodName,
         food_image: foodImageUrl,
         preparation_date_time: new Date(formData.preparationDate).toISOString(),
-        expiry_date_time: new Date(formData.expiryDate).toISOString(),
+        // expiry_date_time: new Date(formData.expiryDate).toISOString(),
         food_type: formData.foodType,
         serves: Number(formData.servings), // Ensure this is a number
         storage: formData.storageType,
@@ -239,7 +239,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
                 className="w-full"
               />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label
                 htmlFor="expiryDate"
                 className="text-sm font-medium text-gray-700"
@@ -253,7 +253,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
                 onChange={(e) => updateFormField("expiryDate", e.target.value)}
                 className="w-full"
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Type Fields */}

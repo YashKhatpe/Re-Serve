@@ -38,7 +38,7 @@ export default function LoginPage() {
   const [isRedirecting, setIsRedirecting] = useState(false); // Loader state
   const { user } = useAuth();
   if (user) {
-    redirect("/dashboard");
+    redirect("/");
   }
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
@@ -105,7 +105,7 @@ export default function LoginPage() {
       {isRedirecting && (
         <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50 space-y-6 text-center px-4">
           <Image
-            src="/navlogo.png" // replace with your icon (same as in your screenshot)
+            src="/navlogo.png"
             alt="Login Illustration"
             width={64}
             height={64}

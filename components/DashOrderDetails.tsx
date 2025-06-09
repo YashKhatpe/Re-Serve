@@ -8,10 +8,11 @@ import { useRouter } from "next/navigation";
 import { NgoOrderDetails } from "@/components/order/ngo-order-details";
 import { useAuth } from "@/context/auth-context";
 import { DashNavbar } from "@/components/DashNavbar";
+import { toast } from "sonner";
 type Orders = {
   id: string;
   serves: number;
-  otp: string;
+  otp: number;
   created_at: string;
   delivery_person_name: string;
   delivery_person_phone_no: number;
@@ -23,21 +24,9 @@ export default function DashOrderDetails() {
   const [filter, setFilter] = useState<string>("ALL");
   const [orders, setOrders] = useState<Orders[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Orders[]>([]);
+  const [otpInput, setOtpInput] = useState<{ [key: string]: string }>({});
   const router = useRouter();
   const { userType, loading, session, user } = useAuth();
-
-  //   useEffect(() => {
-  //   async function checkAuth() {
-  //   const { data: { user } } = await supabase.auth.getUser();
-  //   if (!user) {
-  //     router.push("/login");
-  //     return;
-  //   }
-  //   const { data: donorData } = await supabase.from("donor").select("id").eq("id", user.id).single();
-  //   setUserType(donorData ? "donor" : "ngo");
-  // }
-  // checkAuth();
-  // }, [router]);
 
   useEffect(() => {
     if (loading) return; // Wait until auth check is complete
@@ -48,17 +37,23 @@ export default function DashOrderDetails() {
     }
 
     const fetchOrders = async () => {
-      const { data, error } = await supabase.from("orders").select(`
+      const { data, error } = await supabase
+        .from("orders")
+        .select(
+          `
                         id, 
                         donor_form_id, 
                         ngo_id, 
-                        serves, 
+                        serves,
+                        donor_id, 
                         otp, 
                         created_at, 
                         delivery_person_name, 
                         delivery_person_phone_no, 
                         delivery_status
-                    `);
+                    `
+        )
+        .eq("donor_id", user.id);
 
       if (error) {
         console.error("Error fetching orders:", error);
@@ -73,25 +68,51 @@ export default function DashOrderDetails() {
     fetchOrders();
   }, [loading, user]); // Add `loading` and `user` as dependencies
 
-  const handleStatusChange = (
-    orderId: string,
-    newStatus: "delivering" | "delivered"
-  ) => {
+  // Handle OTP verification
+  const handleVerifyOTP = async (orderId: string, correctOtp: number) => {
+    // Convert both to strings for proper comparison
+    const enteredOtp = (otpInput[orderId] || "").trim();
+    const storedOtp = String(correctOtp).trim();
+    console.log("Both the otps: ", enteredOtp, storedOtp);
+    if (enteredOtp !== storedOtp) {
+      // setError("Incorrect OTP! Please try again.");
+      toast("Incorrect OTP", {
+        description: "Please try again.",
+      });
+      // setSuccess(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ delivery_status: "delivered" })
+      .eq("id", orderId);
+
+    if (error) {
+      // setError("Failed to verify OTP. Please try again.");
+      // setSuccess(null);
+      toast("Incorrect OTP", {
+        description: "Please try again.",
+      });
+      return;
+    }
+
     setOrders((prevOrders) =>
       prevOrders.map((order) =>
-        order.id === orderId ? { ...order, delivery_status: newStatus } : order
+        order.id === orderId
+          ? { ...order, delivery_status: "delivered" }
+          : order
       )
     );
-    setFilteredOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === orderId ? { ...order, delivery_status: newStatus } : order
-      )
-    );
+
+    toast("Correct OTP", {
+      description: "Successfully verified otp",
+    });
   };
 
   return (
     <>
-      {userType == "ngo" ? (
+      {userType == "donor" ? (
         <section className=" px-6 py-10 pt-4">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
             Donor Order Details
@@ -127,12 +148,13 @@ export default function DashOrderDetails() {
                     Delivery Person
                   </th>
                   <th className="p-4 border border-gray-300">Contact</th>
-                  <th className="p-4 border border-gray-300">OTP</th>
+                  {/* <th className="p-4 border border-gray-300">OTP</th> */}
+                  <th className="p-4 border border-gray-300">Enter OTP</th>
                   <th className="p-4 border border-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order) => (
+                {orders.map((order) => (
                   <tr key={order.id} className="border-b border-gray-300">
                     <td className="p-4 border border-gray-300">{order.id}</td>
                     <td className="p-4 border border-gray-300">
@@ -155,22 +177,36 @@ export default function DashOrderDetails() {
                     <td className="p-4 border border-gray-300">
                       {order.delivery_person_phone_no}
                     </td>
-                    <td className="p-4 border border-gray-300">{order.otp}</td>
+                    {/* <td className="p-4 border border-gray-300">{order.otp}</td> */}
                     <td className="p-4 border border-gray-300">
-                      <Button
-                        onClick={() =>
-                          handleStatusChange(
-                            order.id,
-                            order.delivery_status === "delivering"
-                              ? "delivered"
-                              : "delivering"
-                          )
-                        }
-                      >
-                        {order.delivery_status === "delivering"
-                          ? "Mark as Delivered"
-                          : "Mark as Delivering"}
-                      </Button>
+                      {order.delivery_status === "delivered" ? (
+                        <span className="text-gray-500">Already Delivered</span>
+                      ) : (
+                        <input
+                          type="text"
+                          placeholder="Enter OTP"
+                          className="px-3 py-2 border rounded-md w-32"
+                          value={otpInput[order.id] || ""}
+                          onChange={(e) =>
+                            setOtpInput((prev) => ({
+                              ...prev,
+                              [order.id]: e.target.value,
+                            }))
+                          }
+                        />
+                      )}
+                    </td>
+                    <td className="p-4 border border-gray-300">
+                      {order.delivery_status === "delivered" ? (
+                        <span className="text-green-600">✔ Verified</span>
+                      ) : (
+                        <Button
+                          onClick={() => handleVerifyOTP(order.id, order.otp)}
+                          disabled={!otpInput[order.id]}
+                        >
+                          Verify OTP
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}
