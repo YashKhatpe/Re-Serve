@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,8 +21,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { FOOD_PREFERENCES } from "@/lib/constants";
-
-
+import BackButton from "@/components/BackButton";
+import Link from "next/link";
 
 const donorFormSchema = z
   .object({
@@ -84,14 +84,13 @@ const ngoFormSchema = z
 export default function RegisterPage() {
   const [activeTab, setActiveTab] = useState("donor");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const type = searchParams.get("type");
-    if (type === "donor" || type === "ngo") {
-      setActiveTab(type);
-    }
-  }, []);
+    const type = searchParams.get("tab") || "donor";
+    console.log("Type is: ", type, activeTab);
+    setActiveTab(type);
+  }, [searchParams]);
 
   const donorForm = useForm<z.infer<typeof donorFormSchema>>({
     resolver: zodResolver(donorFormSchema),
@@ -124,7 +123,6 @@ export default function RegisterPage() {
     },
   });
   async function onDonorSubmit(data: z.infer<typeof donorFormSchema>) {
-
     console.log("Submitting Donor Form:", data);
 
     // Validate FSSAI License before proceeding
@@ -249,28 +247,32 @@ export default function RegisterPage() {
       <div className="container mx-auto px-6 py-12">
         <div className="flex flex-col lg:flex-row gap-12 items-center">
           {/* Left Side - Hero Content */}
-          <div className="w-full lg:w-1/2 space-y-8">
-            <div className="space-y-6">
+          <div className="hidden lg:block w-full lg:w-1/2 space-y-6 ">
+            <div className="space-y-2">
               <h1 className="text-4xl lg:text-5xl font-bold text-[#2D3748] leading-tight">
                 Small Changes That{" "}
                 <span className="text-[#FF6B35]">Change The Future</span>
               </h1>
               <p className="text-lg text-[#718096] leading-relaxed max-w-lg">
-                Connect restaurants with surplus food to NGOs and make every meal matter.
-                Reduce food waste while serving those in need with our secure, verified platform.
+                Connect restaurants with surplus food to NGOs and make every
+                meal matter. Reduce food waste while serving those in need with
+                our secure, verified platform.
               </p>
-              <div className="flex flex-wrap gap-4">
-                <button className="bg-[#FF6B35] text-white px-6 py-3 rounded-full hover:bg-[#E55A2B] transition-colors font-medium">
-                  Start Donating
-                </button>
-                <button className="border border-[#FF6B35] text-[#FF6B35] px-6 py-3 rounded-full hover:bg-[#FF6B35] hover:text-white transition-colors font-medium">
-                  Join as NGO
-                </button>
+              <div className="mt-4 text-sm text-gray-600 ">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="text-[#FF6B35] font-semibold hover:underline px-2"
+                >
+                  <button className="w-24 h-8 bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl  font-medium text-base shadow-lg hover:shadow-xl transition-all">
+                    Login
+                  </button>
+                </Link>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap gap-8 pt-8">
+            <div className="flex flex-wrap gap-8 ">
               <div className="text-center">
                 <div className="text-3xl font-bold text-[#FF6B35]">500+</div>
                 <div className="text-sm text-[#718096]">Meals Served</div>
@@ -296,18 +298,18 @@ export default function RegisterPage() {
           {/* Right Side - Registration Form */}
           <div className="w-full lg:w-1/2 max-w-md mx-auto">
             <Tabs
-              defaultValue={activeTab}
+              value={activeTab}
               onValueChange={setActiveTab}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2 bg-white/80 backdrop-blur-sm border border-[#E8E5E1] rounded-2xl">
-                <TabsTrigger 
+                <TabsTrigger
                   value="donor"
                   className="rounded-xl data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
                 >
                   Donor Registration
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="ngo"
                   className="rounded-xl data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
                 >
@@ -319,9 +321,12 @@ export default function RegisterPage() {
               <TabsContent value="donor">
                 <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
                   <CardHeader className="">
+                    {/* <div className="flex"> */}
+                    <BackButton />
                     <CardTitle className="text-2xl font-bold text-[#2D3748] text-center">
-                      Register as a Food Donor
+                      Register as a Donor
                     </CardTitle>
+                    {/* </div> */}
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <Form {...donorForm}>
@@ -334,7 +339,9 @@ export default function RegisterPage() {
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">Name</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Name
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Enter your name or organization name"
@@ -353,7 +360,9 @@ export default function RegisterPage() {
                             name="email"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">Email</FormLabel>
+                                <FormLabel className="text-[#4A5568] font-medium">
+                                  Email
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="email"
@@ -372,7 +381,9 @@ export default function RegisterPage() {
                             name="phone_no"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">Phone Number</FormLabel>
+                                <FormLabel className="text-[#4A5568] font-medium">
+                                  Phone Number
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Enter your phone number"
@@ -386,36 +397,38 @@ export default function RegisterPage() {
                           />
                         </div>
 
-<FormField
-  control={donorForm.control}
-  name="fssai_license"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel className="text-[#4A5568] font-medium">
-        FSSAI License Number
-      </FormLabel>
-      <FormControl>
-        <Input
-          placeholder="e.g., 12345678901234"
-          {...field}
-          className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
-        />
-      </FormControl>
-      <p className="text-xs text-gray-500 mt-1">
-        Example: 12345678901234 (14-digit number issued by FSSAI)
-      </p>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-
+                        <FormField
+                          control={donorForm.control}
+                          name="fssai_license"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                FSSAI License Number
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="e.g., 12345678901234"
+                                  {...field}
+                                  className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
+                                />
+                              </FormControl>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Example: 12345678901234 (14-digit number issued
+                                by FSSAI)
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
                         <FormField
                           control={donorForm.control}
                           name="address_map_link"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">Address Map Link</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Address Map Link
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Enter Google Maps link to your location"
@@ -433,7 +446,9 @@ export default function RegisterPage() {
                           name="food_preference"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">Food Preference</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Food Preference
+                              </FormLabel>
                               <FormControl>
                                 <div className="grid grid-cols-3 gap-3">
                                   {FOOD_PREFERENCES.map((preference) => (
@@ -443,13 +458,24 @@ export default function RegisterPage() {
                                     >
                                       <Checkbox
                                         id={preference.value}
-                                        checked={field.value?.includes(preference.value)}
+                                        checked={field.value?.includes(
+                                          preference.value
+                                        )}
                                         onCheckedChange={(checked) => {
                                           field.onChange(
                                             checked
-                                              ? [...(Array.isArray(field.value) ? field.value : []), preference.value]
-                                              : (Array.isArray(field.value) ? field.value : []).filter(
-                                                  (val) => val !== preference.value
+                                              ? [
+                                                  ...(Array.isArray(field.value)
+                                                    ? field.value
+                                                    : []),
+                                                  preference.value,
+                                                ]
+                                              : (Array.isArray(field.value)
+                                                  ? field.value
+                                                  : []
+                                                ).filter(
+                                                  (val) =>
+                                                    val !== preference.value
                                                 )
                                           );
                                         }}
@@ -476,7 +502,9 @@ export default function RegisterPage() {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">Password</FormLabel>
+                                <FormLabel className="text-[#4A5568] font-medium">
+                                  Password
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="password"
@@ -495,7 +523,9 @@ export default function RegisterPage() {
                             name="confirmPassword"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">Confirm Password</FormLabel>
+                                <FormLabel className="text-[#4A5568] font-medium">
+                                  Confirm Password
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="password"
@@ -526,9 +556,12 @@ export default function RegisterPage() {
               <TabsContent value="ngo">
                 <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
                   <CardHeader className="">
+                    {/* <div className="flex"> */}
+                    <BackButton />
                     <CardTitle className="text-2xl font-bold text-[#2D3748] text-center">
                       Register as an NGO
                     </CardTitle>
+                    {/* </div> */}
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <Form {...ngoForm}>
@@ -541,7 +574,9 @@ export default function RegisterPage() {
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">NGO Name</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                NGO Name
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Enter your NGO name"
@@ -554,54 +589,58 @@ export default function RegisterPage() {
                           )}
                         />
 
-                          <FormField
-                            control={ngoForm.control}
-                            name="reg_no"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">Registration Number</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Enter NGO registration number"
-                                    {...field}
-                                    className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                        <FormField
+                          control={ngoForm.control}
+                          name="reg_no"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Registration Number
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter NGO registration number"
+                                  {...field}
+                                  className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                          <FormField
-                            control={ngoForm.control}
-                            name="fcra_reg_no"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">
-                                  FCRA Registration Number
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="e.g., 23165012345678"
-                                    {...field}
-                                    className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
-                                  />
-                                </FormControl>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Example: 23165012345678 (As issued by the Ministry of Home Affairs)
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
+                        <FormField
+                          control={ngoForm.control}
+                          name="fcra_reg_no"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                FCRA Registration Number
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="e.g., 23165012345678"
+                                  {...field}
+                                  className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
+                                />
+                              </FormControl>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Example: 23165012345678 (As issued by the
+                                Ministry of Home Affairs)
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
                         <FormField
                           control={ngoForm.control}
                           name="address_map_link"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">Address Map Link</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Address Map Link
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Enter Google Maps link to your location"
@@ -619,7 +658,9 @@ export default function RegisterPage() {
                           name="operating_hours"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">Operating Hours</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Operating Hours
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="e.g., Mon-Fri: 9AM-5PM"
@@ -637,7 +678,9 @@ export default function RegisterPage() {
                           name="contact_person"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">Contact Person</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Contact Person
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Enter name of primary contact person"
@@ -655,7 +698,9 @@ export default function RegisterPage() {
                           name="food_preference"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">Food Preference</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Food Preference
+                              </FormLabel>
                               <FormControl>
                                 <div className="grid grid-cols-3 gap-3">
                                   {FOOD_PREFERENCES.map((preference) => (
@@ -665,13 +710,24 @@ export default function RegisterPage() {
                                     >
                                       <Checkbox
                                         id={preference.value}
-                                        checked={field.value?.includes(preference.value)}
+                                        checked={field.value?.includes(
+                                          preference.value
+                                        )}
                                         onCheckedChange={(checked) => {
                                           field.onChange(
                                             checked
-                                              ? [...(Array.isArray(field.value) ? field.value : []), preference.value]
-                                              : (Array.isArray(field.value) ? field.value : []).filter(
-                                                  (val) => val !== preference.value
+                                              ? [
+                                                  ...(Array.isArray(field.value)
+                                                    ? field.value
+                                                    : []),
+                                                  preference.value,
+                                                ]
+                                              : (Array.isArray(field.value)
+                                                  ? field.value
+                                                  : []
+                                                ).filter(
+                                                  (val) =>
+                                                    val !== preference.value
                                                 )
                                           );
                                         }}
@@ -697,7 +753,9 @@ export default function RegisterPage() {
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[#4A5568] font-medium">Email</FormLabel>
+                              <FormLabel className="text-[#4A5568] font-medium">
+                                Email
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   type="email"
@@ -717,7 +775,9 @@ export default function RegisterPage() {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">Password</FormLabel>
+                                <FormLabel className="text-[#4A5568] font-medium">
+                                  Password
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="password"
@@ -736,7 +796,9 @@ export default function RegisterPage() {
                             name="confirmPassword"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-[#4A5568] font-medium">Confirm Password</FormLabel>
+                                <FormLabel className="text-[#4A5568] font-medium">
+                                  Confirm Password
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="password"
