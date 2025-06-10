@@ -14,7 +14,7 @@ export default function ReceiptHistory() {
       setLoading(true);
       const { data, error } = await supabase
         .from("orders")
-        .select("id, created_at, donor_form:donor_form_id(food_name)")
+        .select("id, created_at, serves, donor_form:donor_form_id(food_name)")
         .eq("donor_form.donor_id", user.id)
         .order("created_at", { ascending: false });
       setOrders(data || []);
@@ -26,30 +26,27 @@ export default function ReceiptHistory() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div>
+    <div className="p-4 my-6">
       <h2 className="text-xl font-bold mb-4">Your Donation Receipts</h2>
-      <table className="min-w-full">
-        <thead>
+      <table className="min-w-full border-2 border-orange-500 rounded-xl">
+        <thead className="bg-orange-500 text-white">
           <tr>
-            <th>Date</th>
-            <th>Food Name</th>
-            <th>Receipt</th>
+            <th className="text-center px-4 py-2 border-2 border-orange-500" >Food Name</th>
+            <th className="text-center px-4 py-2">Receipt Generated On</th>
+            <th className="text-center px-4 py-2">Amount</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody >
           {orders.map((order) => (
-            <tr key={order.id}>
-              <td>{new Date(order.created_at).toLocaleDateString()}</td>
-              <td>{order.donor_form?.food_name}</td>
-              <td>
-                <Button
-                  onClick={() =>
-                    window.open(`/api/receipts/${order.id}`, "_blank")
-                  }
-                  className="bg-orange-500 text-white"
-                >
-                  Download Receipt
-                </Button>
+            <tr key={order.id} className="border-2 border-orange-500" >
+              <td className="text-center px-4 py-2 border-2 border-orange-500">
+                {order.donor_form?.food_name}
+              </td>
+              <td className="text-center px-4 py-2 border-2 border-orange-500">
+                {new Date(order.created_at).toLocaleString()}
+              </td>
+              <td className="text-center px-4 py-2 border-2 border-orange-500">
+                ₹{order.serves ? (order.serves * 50).toFixed(2) : "0.00"}
               </td>
             </tr>
           ))}

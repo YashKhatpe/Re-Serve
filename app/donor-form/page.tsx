@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useParams } from "next/navigation";
 
 // Define type for form data
 interface FoodDonationForm {
@@ -92,6 +93,9 @@ export default function DonorFoodForm() {
   const audioChunksRef = useRef<Blob[]>([]);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [currentStatus, setCurrentStatus] = useState<string>("");
+
+  const params = useParams();
+  const donationId = params.id;
 
   useEffect(() => {
     if (isDialogOpen && currentVoiceField) {
