@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: donorData, error: donorError } = await supabase
           .from("donor")
           .select("id")
-          .eq("id", authUser.id)
+          .eq("id", authUser?.id)
           .single();
 
         if (donorData) {
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: ngoData, error: ngoError } = await supabase
           .from("ngo")
           .select("id")
-          .eq("id", authUser.id)
+          .eq("id", authUser?.id)
           .single();
 
         if (ngoData) {

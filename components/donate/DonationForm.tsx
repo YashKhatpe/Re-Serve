@@ -146,7 +146,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
         serves: Number(formData.servings), // Ensure this is a number
         storage: formData.storageType,
         preferred_pickup_time: formData.pickupTime,
-        donor_id: user.id,
+        donor_id: user?.id,
         created_at: new Date().toISOString(),
         food_safety_info: foodSafetyInfo,
       };

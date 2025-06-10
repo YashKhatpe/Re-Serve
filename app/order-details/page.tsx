@@ -68,7 +68,7 @@ export default function OrderDetailsPage() {
                         delivery_status
                     `
         )
-        .eq("donor_id", user.id);
+        .eq("donor_id", user?.id);
 
       if (error) {
         console.error("Error fetching orders:", error);
