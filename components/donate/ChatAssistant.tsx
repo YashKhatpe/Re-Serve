@@ -79,7 +79,7 @@ const foodTypeOptions = [
 const storageTypeOptions = [
   { value: "refrigerated", label: "Refrigerated" },
   { value: "frozen", label: "Frozen" },
-  { value: "room-temperature", label: "Room Temperature" },
+  { value: "room_temp", label: "Room Temperature" },
 ];
 
 // Audio buffer to WAV conversion utility
@@ -269,7 +269,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({
           lowercaseResponse.includes("room") ||
           lowercaseResponse.includes("normal")
         ) {
-          return "room-temperature";
+          return "room_temp";
         }
         return response;
 

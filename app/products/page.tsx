@@ -65,7 +65,7 @@ export default function ProductDetailPage() {
       const { data, error } = await supabase
         .from("donor_form")
         .select(
-          "food_safety_info, preparation_date_time, expiry_date_time, food_name, food_image, food_type, serves, storage, preferred_pickup_time, donor_id, created_at"
+          "food_safety_info, preparation_date_time, food_name, food_image, food_type, serves, storage, preferred_pickup_time, donor_id, created_at"
         )
         .eq("id", selectedDonation.id)
         .single();
@@ -102,30 +102,31 @@ export default function ProductDetailPage() {
           setExpiryCountdown(text);
           setIsExpired(false);
         }
-      } else {
-        // fallback to DB expiry
-        const dbExpiry = selectedDonation?.expiry_date_time
-          ? new Date(selectedDonation.expiry_date_time)
-          : null;
-        if (!dbExpiry) {
-          setExpiryCountdown("");
-          setIsExpired(true);
-          return;
-        }
-        const diffMs = dbExpiry.getTime() - now.getTime();
-        if (diffMs <= 0) {
-          setExpiryCountdown("Expired");
-          setIsExpired(true);
-        } else {
-          const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-          const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-          let text = "";
-          if (diffHrs > 0) text += `${diffHrs} hour${diffHrs > 1 ? "s" : ""} `;
-          text += `${diffMin} minute${diffMin !== 1 ? "s" : ""} left to expire`;
-          setExpiryCountdown(text);
-          setIsExpired(false);
-        }
       }
+      // } else {
+      //   // fallback to DB expiry
+      //   const dbExpiry = selectedDonation?.expiry_date_time
+      //     ? new Date(selectedDonation.expiry_date_time)
+      //     : null;
+      //   if (!dbExpiry) {
+      //     setExpiryCountdown("1");
+      //     setIsExpired(true);
+      //     return;
+      //   }
+      //   const diffMs = dbExpiry.getTime() - now.getTime();
+      //   if (diffMs <= 0) {
+      //     setExpiryCountdown("Expired");
+      //     setIsExpired(true);
+      //   } else {
+      //     const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+      //     const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      //     let text = "";
+      //     if (diffHrs > 0) text += `${diffHrs} hour${diffHrs > 1 ? "s" : ""} `;
+      //     text += `${diffMin} minute${diffMin !== 1 ? "s" : ""} left to expire`;
+      //     setExpiryCountdown(text);
+      //     setIsExpired(false);
+      //   }
+      // }
     }
     updateCountdown();
     interval = setInterval(updateCountdown, 60000); // update every minute
@@ -188,9 +189,7 @@ export default function ProductDetailPage() {
       selectedDonation.serves
     }. The product was prepared on ${formatDateTime(
       selectedDonation.preparation_date_time
-    )} and its expiry date is ${formatDateTime(
-      selectedDonation.expiry_date_time
-    )}. The distance of the product from your location is ${
+    )} and it will expire in ${expiryCountdown}. The distance of the product from your location is ${
       selectedDonation.distance
     } kilometer away.`;
 
@@ -334,6 +333,7 @@ export default function ProductDetailPage() {
 
   // Helper to calculate expiry date from preparation date and shelf life hours
   function getApiExpiryDate() {
+    console.log("In to expiry");
     if (!foodSafetyInfo || !selectedDonation?.preparation_date_time)
       return null;
     const prepTime = new Date(selectedDonation.preparation_date_time);
@@ -362,282 +362,312 @@ export default function ProductDetailPage() {
   return (
     <>
       <Navbar />
-   <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3]">
-      <div className="container mx-auto px-6 py-12">
-        <div className="space-y-8">
-          {/* Header Section */}
-          <div className="space-y-6">
-          
-            
-            <div className="flex justify-between items-start">
-              <h1 className="text-4xl lg:text-5xl font-bold text-[#2D3748] leading-tight">
-                {selectedDonation.food_name}
-              </h1>
-              <Button
-                onClick={handleDictateDetails}
-                className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-full p-3 transition-all shadow-lg hover:shadow-xl"
-              >
-                <Volume2 className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Food Image */}
-            <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden pt-0 h-fit pb-0">
-              <div className="relative">
-                <img
-                  src={selectedDonation.food_image}
-                  alt={selectedDonation.food_name}
-                  className="w-full object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-[#FF6B35] text-white px-4 py-2 rounded-full text-sm font-medium">
-                  {selectedDonation.food_type}
-                </div>
+      <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3]">
+        <div className="container mx-auto px-6 py-12">
+          <div className="space-y-8">
+            {/* Header Section */}
+            <div className="space-y-6">
+              <div className="flex justify-between items-start">
+                <h1 className="text-4xl lg:text-5xl font-bold text-[#2D3748] leading-tight">
+                  {selectedDonation.food_name}
+                </h1>
+                <Button
+                  onClick={handleDictateDetails}
+                  className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-full p-3 transition-all shadow-lg hover:shadow-xl"
+                >
+                  <Volume2 className="w-5 h-5" />
+                </Button>
               </div>
-            </Card>
+            </div>
 
-            {/* Details Card */}
-            <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
-              <CardContent className="p-8 space-y-6">
-                <div className="space-y-4">
-                  <h2 className="text-2xl font-bold text-[#2D3748]">Details</h2>
-                  <Separator className="bg-[#E8E5E1]" />
+            {/* Main Content */}
+            <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Food Image */}
+              <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden pt-0 h-fit pb-0">
+                <div className="relative">
+                  <img
+                    src={selectedDonation.food_image}
+                    alt={selectedDonation.food_name}
+                    className="w-full object-cover"
+                  />
+                  <div className="absolute top-4 right-4 bg-[#FF6B35] text-white px-4 py-2 rounded-full text-sm font-medium">
+                    {selectedDonation.food_type}
+                  </div>
                 </div>
+              </Card>
 
-                <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
-                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
-                      <MapPin className="w-6 h-6 text-[#FF6B35]" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#2D3748]">Pickup Location</p>
-                      <p className="text-[#718096]">
-                        {Math.round(selectedDonation.distance * 100) / 100} km away
-                      </p>
-                    </div>
+              {/* Details Card */}
+              <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
+                <CardContent className="p-8 space-y-6">
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold text-[#2D3748]">
+                      Details
+                    </h2>
+                    <Separator className="bg-[#E8E5E1]" />
                   </div>
 
-                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
-                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
-                      <Sprout className="w-6 h-6 text-[#FF6B35]" />
+                  <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                      <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                        <MapPin className="w-6 h-6 text-[#FF6B35]" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#2D3748]">
+                          Pickup Location
+                        </p>
+                        <p className="text-[#718096]">
+                          {Math.round(selectedDonation.distance * 100) / 100} km
+                          away
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-[#2D3748]">Food Type</p>
-                      <p className="text-[#718096]">{selectedDonation.food_type}</p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
-                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
-                      <Clock className="w-6 h-6 text-[#FF6B35]" />
+                    <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                      <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                        <Sprout className="w-6 h-6 text-[#FF6B35]" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#2D3748]">
+                          Food Type
+                        </p>
+                        <p className="text-[#718096]">
+                          {selectedDonation.food_type}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-[#2D3748]">Pickup Time</p>
-                      <p className="text-[#718096]">{selectedDonation.preferred_pickup_time}</p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
-                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
-                      <Clock className="w-6 h-6 text-[#FF6B35]" />
+                    <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                      <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                        <Clock className="w-6 h-6 text-[#FF6B35]" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#2D3748]">
+                          Pickup Time
+                        </p>
+                        <p className="text-[#718096]">
+                          {selectedDonation.preferred_pickup_time}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-[#2D3748]">Expiry Date</p>
-                      <p className="text-[#718096]">
+
+                    <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                      <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                        <Clock className="w-6 h-6 text-[#FF6B35]" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#2D3748]">
+                          Expiry Date
+                        </p>
+                        {/* <p className="text-[#718096]">
                         {new Date(selectedDonation.expiry_date_time).toLocaleDateString()}{" "}
                         {new Date(selectedDonation.expiry_date_time).toLocaleTimeString()}
-                      </p>
-                      <p className="text-sm font-semibold text-red-600">
-                        {expiryCountdown}
-                      </p>
+                      </p> */}
+                        <p className="text-sm font-semibold text-red-600">
+                          {expiryCountdown}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                      <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                        <Sprout className="w-6 h-6 text-[#FF6B35]" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#2D3748]">Serves</p>
+                        <p className="text-[#718096]">
+                          {selectedDonation.serves} people
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
+                      <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
+                        <Clock className="w-6 h-6 text-[#FF6B35]" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#2D3748]">
+                          Storage Type
+                        </p>
+                        <p className="text-[#718096]">
+                          {selectedDonation.storage}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
-                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
-                      <Sprout className="w-6 h-6 text-[#FF6B35]" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#2D3748]">Serves</p>
-                      <p className="text-[#718096]">{selectedDonation.serves} people</p>
-                    </div>
+                  {/* Food Safety Info Section */}
+                  {/* Food Safety Info from API */}
+                  <div className="col-span-2">
+                    <Separator />
+                    <h3 className="font-semibold mt-2">Food Safety Info</h3>
+                    {loadingSafety ? (
+                      <p>Loading food safety info...</p>
+                    ) : safetyError ? (
+                      <p className="text-red-500">{safetyError}</p>
+                    ) : foodSafetyInfo ? (
+                      <div className="space-y-1">
+                        <p>
+                          <strong>Status:</strong>{" "}
+                          {foodSafetyInfo.safety_status}
+                        </p>
+                        <p>
+                          <strong>Message:</strong>{" "}
+                          {foodSafetyInfo.safety_message}
+                        </p>
+                        <p>
+                          <strong>Recommended Storage:</strong>{" "}
+                          {foodSafetyInfo.recommended_storage}
+                        </p>
+                        <p>
+                          <strong>Hours before unsafe:</strong>{" "}
+                          <span className="text-red-600 font-semibold">
+                            {(() => {
+                              const apiExpiry = getApiExpiryDate();
+                              if (!apiExpiry) return 0;
+                              const now = new Date();
+                              const diffMs =
+                                apiExpiry.getTime() - now.getTime();
+                              if (diffMs <= 0) return 0;
+                              const diffHrs = Math.floor(
+                                diffMs / (1000 * 60 * 60)
+                              );
+                              return diffHrs;
+                            })()}
+                          </span>
+                        </p>
+                        {foodSafetyInfo.safety_guidelines && (
+                          <ul className="list-disc ml-5">
+                            {foodSafetyInfo.safety_guidelines.map(
+                              (g: string, i: number) => (
+                                <li key={i}>{g}</li>
+                              )
+                            )}
+                          </ul>
+                        )}
+                      </div>
+                    ) : (
+                      <p>No food safety info available.</p>
+                    )}
                   </div>
-
-                  <div className="flex items-center gap-4 p-4 bg-[#F5F3F0]/50 rounded-2xl">
-                    <div className="bg-[#FF6B35]/10 p-3 rounded-xl">
-                      <Clock className="w-6 h-6 text-[#FF6B35]" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#2D3748]">Storage Type</p>
-                      <p className="text-[#718096]">{selectedDonation.storage}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Food Safety Info Section */}
-                                {/* Food Safety Info from API */}
-                <div className="col-span-2">
-                  <Separator />
-                  <h3 className="font-semibold mt-2">Food Safety Info</h3>
-                  {loadingSafety ? (
-                    <p>Loading food safety info...</p>
-                  ) : safetyError ? (
-                    <p className="text-red-500">{safetyError}</p>
-                  ) : foodSafetyInfo ? (
-                    <div className="space-y-1">
-                      <p>
-                        <strong>Status:</strong> {foodSafetyInfo.safety_status}
-                      </p>
-                      <p>
-                        <strong>Message:</strong>{" "}
-                        {foodSafetyInfo.safety_message}
-                      </p>
-                      <p>
-                        <strong>Recommended Storage:</strong>{" "}
-                        {foodSafetyInfo.recommended_storage}
-                      </p>
-                      <p>
-                        <strong>Hours before unsafe:</strong>{" "}
-                        <span className="text-red-600 font-semibold">
-                          {(() => {
-                            const apiExpiry = getApiExpiryDate();
-                            if (!apiExpiry) return 0;
-                            const now = new Date();
-                            const diffMs = apiExpiry.getTime() - now.getTime();
-                            if (diffMs <= 0) return 0;
-                            const diffHrs = Math.floor(
-                              diffMs / (1000 * 60 * 60)
-                            );
-                            return diffHrs;
-                          })()}
-                        </span>
-                      </p>
-                      {foodSafetyInfo.safety_guidelines && (
-                        <ul className="list-disc ml-5">
-                          {foodSafetyInfo.safety_guidelines.map(
-                            (g: string, i: number) => (
-                              <li key={i}>{g}</li>
-                            )
-                          )}
-                        </ul>
-                      )}
-                    </div>
-                  ) : (
-                    <p>No food safety info available.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Request Button */}
-          <div className="flex items-center justify-center pt-8">
-            {isExpired ? (
-              <div className="text-center p-6 bg-red-50 rounded-3xl border border-red-200">
-                <p className="text-red-600 font-semibold text-lg">
-                  This food has expired and cannot be requested.
-                </p>
-              </div>
-            ) : (
-              <Button
-                className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-2xl px-12 py-6 text-lg font-semibold transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
-                onClick={() => {
-                  setIsOpen(true);
-                  generateOTP();
-                }}
-              >
-                Request Food
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Request Dialog */}
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="bg-white/95 backdrop-blur-sm border-[#E8E5E1] rounded-3xl shadow-2xl max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-[#2D3748] text-center">
-                Request Food
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-6 p-2">
-              <div className="space-y-3">
-                <Label htmlFor="serves" className="text-[#4A5568] font-medium">
-                  Number of Serves
-                </Label>
-                <Input
-                  id="serves"
-                  max={selectedDonation.serves}
-                  min="1"
-                  type="number"
-                  value={serves}
-                  onChange={(e) => onServeValueChange(e.target.value)}
-                  placeholder="Enter number of serves"
-                  className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
-                />
-              </div>
-              
-              <div className="space-y-3">
-                <Label htmlFor="delivery_person_name" className="text-[#4A5568] font-medium">
-                  Delivery Person Name
-                </Label>
-                <Input
-                  id="delivery_person_name"
-                  type="text"
-                  value={delivery_person_name}
-                  onChange={(e) => setDeliveryPersonName(e.target.value)}
-                  placeholder="Enter name of delivery person"
-                  className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
-                />
-              </div>
-              
-              <div className="space-y-3">
-                <Label htmlFor="delivery_person_phone_no" className="text-[#4A5568] font-medium">
-                  Delivery Person Phone
-                </Label>
-                <Input
-                  id="delivery_person_phone_no"
-                  type="tel"
-                  value={delivery_person_phone_no}
-                  onChange={(e) => setDeliveryPersonPhoneNo(e.target.value)}
-                  placeholder="Enter phone number"
-                  className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
-                />
-              </div>
-              
-              <div className="hidden">
-                <Input
-                  type="text"
-                  value={otp}
-                  disabled
-                  onChange={(e) => setOtp(e.target.value)}
-                />
-              </div>
+                </CardContent>
+              </Card>
             </div>
-            
-            <div className="flex justify-center gap-4 pt-4">
-              <DialogClose asChild>
-                <Button 
-                  variant="outline" 
-                  className="border-[#E8E5E1] text-[#4A5568] hover:bg-[#F5F3F0] rounded-xl px-6 py-3"
+
+            {/* Request Button */}
+            <div className="flex items-center justify-center pt-8">
+              {isExpired ? (
+                <div className="text-center p-6 bg-red-50 rounded-3xl border border-red-200">
+                  <p className="text-red-600 font-semibold text-lg">
+                    This food has expired and cannot be requested.
+                  </p>
+                </div>
+              ) : (
+                <Button
+                  className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-2xl px-12 py-6 text-lg font-semibold transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+                  onClick={() => {
+                    setIsOpen(true);
+                    generateOTP();
+                  }}
                 >
-                  Cancel
+                  Request Food
                 </Button>
-              </DialogClose>
-              <Button
-                onClick={onOrderPlaced}
-                className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl px-6 py-3 font-medium transition-all shadow-lg hover:shadow-xl"
-              >
-                Submit Request
-              </Button>
+              )}
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+
+          {/* Request Dialog */}
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent className="bg-white/95 backdrop-blur-sm border-[#E8E5E1] rounded-3xl shadow-2xl max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-[#2D3748] text-center">
+                  Request Food
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-6 p-2">
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="serves"
+                    className="text-[#4A5568] font-medium"
+                  >
+                    Number of Serves
+                  </Label>
+                  <Input
+                    id="serves"
+                    max={selectedDonation.serves}
+                    min="1"
+                    type="number"
+                    value={serves}
+                    onChange={(e) => onServeValueChange(e.target.value)}
+                    placeholder="Enter number of serves"
+                    className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="delivery_person_name"
+                    className="text-[#4A5568] font-medium"
+                  >
+                    Delivery Person Name
+                  </Label>
+                  <Input
+                    id="delivery_person_name"
+                    type="text"
+                    value={delivery_person_name}
+                    onChange={(e) => setDeliveryPersonName(e.target.value)}
+                    placeholder="Enter name of delivery person"
+                    className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="delivery_person_phone_no"
+                    className="text-[#4A5568] font-medium"
+                  >
+                    Delivery Person Phone
+                  </Label>
+                  <Input
+                    id="delivery_person_phone_no"
+                    type="tel"
+                    value={delivery_person_phone_no}
+                    onChange={(e) => setDeliveryPersonPhoneNo(e.target.value)}
+                    placeholder="Enter phone number"
+                    className="bg-white/80 border-[#E8E5E1] rounded-xl focus:border-[#FF6B35] focus:ring-[#FF6B35]"
+                  />
+                </div>
+
+                <div className="hidden">
+                  <Input
+                    type="text"
+                    value={otp}
+                    disabled
+                    onChange={(e) => setOtp(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-center gap-4 pt-4">
+                <DialogClose asChild>
+                  <Button
+                    variant="outline"
+                    className="border-[#E8E5E1] text-[#4A5568] hover:bg-[#F5F3F0] rounded-xl px-6 py-3"
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  onClick={onOrderPlaced}
+                  className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl px-6 py-3 font-medium transition-all shadow-lg hover:shadow-xl"
+                >
+                  Submit Request
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
-    </div>
     </>
   );
 }

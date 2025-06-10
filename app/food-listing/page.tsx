@@ -765,12 +765,12 @@ export default function FoodListingPage() {
                             <p className="text-[#718096] mb-3">
                               Serves {donation.serves} people
                             </p>
-                            <p className="text-[#4A5568] mb-3">
+                            {/* <p className="text-[#4A5568] mb-3">
                               Expires:{" "}
                               {new Date(
                                 donation.expiry_date_time
                               ).toLocaleString()}
-                            </p>
+                            </p> */}
                             {donation.distance > 0 && (
                               <div className="flex items-center text-[#718096]">
                                 <MapPin
