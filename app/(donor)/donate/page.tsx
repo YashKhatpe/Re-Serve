@@ -71,22 +71,24 @@ const Donate = () => {
             />
           </motion.div>
 
-          {/* Right Side - Chat Assistant (Desktop) */}
+          {/* Right Side - Chat Assistant (Desktop only if not mobile modal) */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="hidden lg:block flex-1 lg:max-w-md h-full"
           >
-            <div className="h-full">
-              <ChatAssistant
-                formData={formData}
-                updateFormField={updateFormField}
-                updateImageField={updateImageField}
-                isOpen={true}
-                onToggle={() => {}}
-              />
-            </div>
+            {!isChatOpen && (
+              <div className="h-full">
+                <ChatAssistant
+                  formData={formData}
+                  updateFormField={updateFormField}
+                  updateImageField={updateImageField}
+                  isOpen={true}
+                  onToggle={() => {}}
+                />
+              </div>
+            )}
           </motion.div>
 
           {/* Mobile Chat Button */}
@@ -126,7 +128,7 @@ const Donate = () => {
                   updateFormField={updateFormField}
                   updateImageField={updateImageField}
                   isOpen={true}
-                  onToggle={() => {}}
+                  onToggle={() => setIsChatOpen(false)}
                 />
               </motion.div>
             </div>

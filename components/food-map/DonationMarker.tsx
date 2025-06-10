@@ -33,7 +33,7 @@ export default function DonationMarker({
 
   const handleDonationClick = (donation: Donation) => {
     setSelectedDonation(donation);
-    router.push("/products");
+    router.push(`/products/${donation.id}`);
   };
 
   return (
