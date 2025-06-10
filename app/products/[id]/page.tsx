@@ -131,6 +131,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!selectedDonation) return;
+    const donationId = selectedDonation.id;
     async function fetchFoodSafetyInfo() {
       if (!selectedDonation) return;
       const { data, error } = await supabase

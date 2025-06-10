@@ -17,12 +17,7 @@ import {
   Calendar,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calender";
+
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import GenerateReceipt from "@/components/GenerateReceipt";
@@ -114,25 +109,6 @@ export default function DonorDashboard() {
         </div>
 
         {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <Link href="/donate" className="w-full sm:w-auto">
-            <Button
-              variant="default"
-              className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
-            >
-              Donate
-            </Button>
-          </Link>
-          <Button
-            onClick={handleGenerateLastMonth}
-            variant="outline"
-            size="sm"
-            className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 w-full sm:w-auto"
-          >
-            <FileText className="h-4 w-4" />
-            {loading ? "Generating..." : "Last Month's Receipts"}
-          </Button>
-        </div>
       </motion.div>
 
       <motion.div
