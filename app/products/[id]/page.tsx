@@ -131,13 +131,14 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!selectedDonation) return;
+    const donationId = selectedDonation.id;
     async function fetchFoodSafetyInfo() {
       const { data, error } = await supabase
         .from("donor_form")
         .select(
           "food_safety_info, preparation_date_time, food_name, food_image, food_type, serves, storage, preferred_pickup_time, donor_id, created_at"
         )
-        .eq("id", selectedDonation.id)
+        .eq("id", donationId)
         .single();
       if (error) {
         setSafetyError("Could not fetch food safety info. " + error.message);

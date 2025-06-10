@@ -259,65 +259,65 @@ export default function DonorFoodForm() {
   };
 
   // Send recorded audio for speech-to-text
-  const sendAudioToSpeechToText = async () => {
-    console.log("Checking recorded audio...");
-    if (audioChunksRef.current.length === 0 || !currentVoiceField) {
-      setCurrentStatus("No audio recorded");
-      console.log("Chunnks length: ", audioChunksRef.current.length);
-      console.error("No audio data found!");
-      return;
-    }
+  // const sendAudioToSpeechToText = async () => {
+  //   console.log("Checking recorded audio...");
+  //   if (audioChunksRef.current.length === 0 || !currentVoiceField) {
+  //     setCurrentStatus("No audio recorded");
+  //     console.log("Chunnks length: ", audioChunksRef.current.length);
+  //     console.error("No audio data found!");
+  //     return;
+  //   }
 
-    try {
-      const audioBlob = new Blob(audioChunksRef.current, {
-        type: "audio/webm",
-      });
-      console.log("Audio Blob size:", audioBlob.size);
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "audio.webm");
+  //   try {
+  //     const audioBlob = new Blob(audioChunksRef.current, {
+  //       type: "audio/webm",
+  //     });
+  //     console.log("Audio Blob size:", audioBlob.size);
+  //     const formData = new FormData();
+  //     formData.append("audio", audioBlob, "audio.webm");
 
-      // Debug: Check FormData content
-      console.log("FormData content:", formData.get("audio"));
+  //     // Debug: Check FormData content
+  //     console.log("FormData content:", formData.get("audio"));
 
-      const response = await fetch("/api/speech-to-text", {
-        method: "POST",
-        body: formData,
-      });
+  //     const response = await fetch("/api/speech-to-text", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Received transcript:", result.text);
+  //     if (response.ok) {
+  //       const result = await response.json();
+  //       console.log("Received transcript:", result.text);
 
-        // Update form data with the transcribed text
-        setFormData((prev) => ({
-          ...prev,
-          [currentVoiceField]: result.text,
-        }));
+  //       // Update form data with the transcribed text
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         [currentVoiceField]: result.text,
+  //       }));
 
-        // Move to next field or end voice interaction
-        const currentIndex = voiceQuestions.findIndex(
-          (q) => q.field === currentVoiceField
-        );
-        if (currentIndex < voiceQuestions.length - 1) {
-          const nextField = voiceQuestions[currentIndex + 1];
-          setCurrentVoiceField(nextField.field);
+  //       // Move to next field or end voice interaction
+  //       const currentIndex = voiceQuestions.findIndex(
+  //         (q) => q.field === currentVoiceField
+  //       );
+  //       if (currentIndex < voiceQuestions.length - 1) {
+  //         const nextField = voiceQuestions[currentIndex + 1];
+  //         setCurrentVoiceField(nextField.field);
 
-          await playQuestionAudio(nextField.question);
-          startRecording();
-        } else {
-          setIsVoiceMode(false);
-          setCurrentStatus("Voice interaction completed");
-          setIsDialogOpen(false);
-        }
-      } else {
-        console.error("Speech-to-text API error:", response);
-        setCurrentStatus("Error converting speech to text");
-      }
-    } catch (err) {
-      console.error("Error sending audio:", err);
-      setCurrentStatus("Error processing audio");
-    }
-  };
+  //         await playQuestionAudio(nextField.question);
+  //         startRecording();
+  //       } else {
+  //         setIsVoiceMode(false);
+  //         setCurrentStatus("Voice interaction completed");
+  //         setIsDialogOpen(false);
+  //       }
+  //     } else {
+  //       console.error("Speech-to-text API error:", response);
+  //       setCurrentStatus("Error converting speech to text");
+  //     }
+  //   } catch (err) {
+  //     console.error("Error sending audio:", err);
+  //     setCurrentStatus("Error processing audio");
+  //   }
+  // };
 
   // Stop recording
   const stopRecording = () => {

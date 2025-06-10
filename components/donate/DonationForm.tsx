@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";

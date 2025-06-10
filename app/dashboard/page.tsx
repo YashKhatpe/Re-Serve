@@ -14,6 +14,7 @@ import { Menu } from "lucide-react";
 import GenerateReceipt from "@/components/GenerateReceipt";
 import Badges from "@/components/Badges";
 import ReceiptHistory from "@/components/dashboard/ReceiptHistory";
+import CurrentOrders from "@/components/CurrentOrders";
 
 export default function Dashboard() {
   const { userType } = useAuth();
@@ -62,6 +63,7 @@ export default function Dashboard() {
               <GenerateReceipt />
             )}
             {activeComponent === "orders" && <DashOrderDetails />}
+            {activeComponent === "current-orders" && <CurrentOrders />}
             {activeComponent === "badges" && userType === "donor" && <Badges />}
             {activeComponent === "receipts" && <ReceiptHistory />}
           </div>

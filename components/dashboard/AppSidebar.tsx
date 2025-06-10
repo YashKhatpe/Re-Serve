@@ -30,7 +30,7 @@ export function AppSidebar({ setActiveComponent, userType }: AppSidebarProps) {
     },
 
     userType === "donor" && {
-      title: "Current orders",
+      title: "Live donations",
       url: "/current-orders",
       icon: ShoppingCart,
       componentId: "current-orders",
