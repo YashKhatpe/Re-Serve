@@ -4,37 +4,24 @@ import { motion } from "framer-motion";
 export default function Footer() {
   const footerLinks = {
     Company: [
-      { name: "About Us", href: "#about" },
-      { name: "How It Works", href: "#how-it-works" },
-      { name: "Impact Stories", href: "#impact" },
-      { name: "Careers", href: "#careers" },
+      { name: "About Us", href: "/about" },
+      { name: "How It Works", href: "/how-it-works" },
+      // { name: "Impact Stories", href: "#impact" },
+      // { name: "Careers", href: "#careers" },
     ],
     "For Restaurants": [
-      { name: "Get Started", href: "#restaurant-signup" },
-      { name: "Benefits", href: "#benefits" },
-      { name: "Tax Information", href: "#tax-info" },
-      { name: "Support", href: "#support" },
+      { name: "Get Started", href: "/register" },
+      { name: "Features", href: "/features" },
+      // { name: "Tax Information", href: "#tax-info" },
+      // { name: "Support", href: "#support" },
     ],
     "For NGOs": [
-      { name: "Join as NGO", href: "#ngo-signup" },
-      { name: "Verification Process", href: "#verification" },
-      { name: "Best Practices", href: "#practices" },
-      { name: "Resources", href: "#resources" },
-    ],
-    Legal: [
-      { name: "Privacy Policy", href: "#privacy" },
-      { name: "Terms of Service", href: "#terms" },
-      { name: "Cookie Policy", href: "#cookies" },
-      { name: "Data Security", href: "#security" },
+      { name: "Join as NGO", href: "/register" },
+      { name: "Benefits", href: "/features" },
+      // { name: "Best Practices", href: "#practices" },
+      // { name: "Resources", href: "#resources" },
     ],
   };
-
-  const socialLinks = [
-    { name: "Twitter", icon: "🐦", href: "#twitter" },
-    { name: "Facebook", icon: "📘", href: "#facebook" },
-    { name: "LinkedIn", icon: "💼", href: "#linkedin" },
-    { name: "Instagram", icon: "📷", href: "#instagram" },
-  ];
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -62,19 +49,6 @@ export default function Footer() {
                 serve a meal and change a life.
               </p>
               {/* Social Links */}
-              <div className="flex space-x-4">
-                {socialLinks.map((social, index) => (
-                  <motion.a
-                    key={index}
-                    href={social.href}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-500 transition-colors"
-                  >
-                    <span className="text-lg">{social.icon}</span>
-                  </motion.a>
-                ))}
-              </div>
             </motion.div>
             {/* Footer Links */}
             {Object.entries(footerLinks).map(
@@ -107,32 +81,7 @@ export default function Footer() {
           </div>
         </div>
         {/* Newsletter Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="border-t border-gray-800 py-8"
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Stay Updated</h3>
-              <p className="text-gray-300">
-                Get the latest updates on our impact and new features.
-              </p>
-            </div>
-            <div className="flex gap-4">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500"
-              />
-              <button className="bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-lg font-semibold transition-colors">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </motion.div>
+
         {/* Bottom Footer */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -141,32 +90,13 @@ export default function Footer() {
           viewport={{ once: true }}
           className="border-t border-gray-800 py-6"
         >
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex justify-center items-center text-center">
             <p className="text-gray-400 text-sm">
               © 2025 Re-Serve. All rights reserved. Making every meal count.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a
-                href="#accessibility"
-                className="text-gray-400 hover:text-orange-400 text-sm transition-colors"
-              >
-                Accessibility
-              </a>
-              <a
-                href="#sitemap"
-                className="text-gray-400 hover:text-orange-400 text-sm transition-colors"
-              >
-                Sitemap
-              </a>
-              <a
-                href="#contact"
-                className="text-gray-400 hover:text-orange-400 text-sm transition-colors"
-              >
-                Contact
-              </a>
-            </div>
           </div>
         </motion.div>
+
       </div>
     </footer>
   );

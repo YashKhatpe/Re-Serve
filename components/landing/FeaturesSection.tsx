@@ -1,7 +1,9 @@
 "use client";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function FeaturesSection() {
+  const router = useRouter();
   const features = [
     {
       title: "Location-Based Filtering",
@@ -127,7 +129,7 @@ export default function FeaturesSection() {
               through Re-Serve
             </p>
             {/* TODO: Add navigation or function for CTA below if needed */}
-            <button className="bg-white text-orange-500 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+            <button onClick={() => router.push("/register")} className="bg-white text-orange-500 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors cursor-pointer">
               Get Started Today
             </button>
           </div>
