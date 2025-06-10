@@ -1,11 +1,9 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Clock, Sprout, ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
-import Image from "next/image";
 import { useDonation } from "@/context/donation-context";
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
@@ -22,7 +20,6 @@ import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { Volume2 } from "lucide-react";
 import axios from "axios";
-import { Erica_One } from "next/font/google";
 
 // Define the type for the food safety API response
 interface FoodSafetyInfo {
@@ -57,26 +54,33 @@ export default function ProductDetailPage() {
   const [expiryCountdown, setExpiryCountdown] = useState<string>("");
   const [isExpired, setIsExpired] = useState(false);
 
-  const router = useRouter();
-
   useEffect(() => {
     if (!selectedDonation) return;
+    const donationId = selectedDonation.id;
     async function fetchFoodSafetyInfo() {
-      const { data, error } = await supabase
-        .from("donor_form")
-        .select(
-          "food_safety_info, preparation_date_time, food_name, food_image, food_type, serves, storage, preferred_pickup_time, donor_id, created_at"
-        )
-        .eq("id", selectedDonation.id)
-        .single();
-      if (error) {
-        setSafetyError("Could not fetch food safety info. " + error.message);
+      try {
+        const { data, error } = await supabase
+          .from("donor_form")
+          .select(
+            "food_safety_info, preparation_date_time, food_name, food_image, food_type, serves, storage, preferred_pickup_time, donor_id, created_at"
+          )
+          .eq("id", donationId)
+          .single();
+
+        if (error) {
+          setSafetyError("Could not fetch food safety info. " + error.message);
+          setFoodSafetyInfo(null);
+        } else {
+          setFoodSafetyInfo(data?.food_safety_info || null);
+        }
+      } catch (err) {
+        setSafetyError("An unexpected error occurred.");
         setFoodSafetyInfo(null);
-      } else {
-        setFoodSafetyInfo(data?.food_safety_info || null);
+      } finally {
+        setLoadingSafety(false);
       }
-      setLoadingSafety(false);
     }
+
     fetchFoodSafetyInfo();
   }, [selectedDonation]);
 

@@ -10,14 +10,8 @@ export default function SignOut() {
   const router = useRouter();
 
   useEffect(() => {
-    // Simulate sign out process
     const signOut = async () => {
-      // Here you would typically call your auth service to sign out
-      // For example: await supabase.auth.signOut() or similar
       await supabase.auth.signOut();
-      // For demo purposes, we'll just simulate a delay
-      //   await new Promise((resolve) => setTimeout(resolve, 1500));
-
       // Redirect to login page after sign out
       router.push("/login");
     };
