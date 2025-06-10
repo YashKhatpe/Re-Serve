@@ -170,8 +170,10 @@ export default function RegisterPage() {
             total_ratings: 0,
           });
 
-          if (donorError) throw donorError;
-
+          if (donorError) {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+            throw donorError;
+          }
           toast("Registration successful!", {
             description: "You can now log in to your donor account.",
           });
@@ -218,8 +220,10 @@ export default function RegisterPage() {
           created_at: new Date(),
         });
 
-        if (ngoError) throw ngoError;
-
+        if (ngoError) {
+          await supabase.auth.admin.deleteUser(authData.user.id);
+          throw ngoError;
+        }
         toast("Registration successful!", {
           description: "You can now log in to your NGO account.",
         });
