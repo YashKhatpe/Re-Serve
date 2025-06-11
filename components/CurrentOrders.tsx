@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { useAuth } from "@/context/auth-context";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import { Edit } from "lucide-react";
+import { Delete, Edit, Trash, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -45,10 +45,20 @@ type DonorFormWithOrders = {
   food_safety_info: string | null;
   original_serves: number;
   orders: Order[]; // related orders with delivery_status = 'delivering'
+  original?: {
+    preparation_date_time: string | null;
+    food_type: string;
+    storage: string;
+  };
 };
 
 export default function CurrentOrders() {
   const [orders, setOrders] = useState<DonorFormWithOrders[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [selectedOrder, setSelectedOrder] =
+    useState<DonorFormWithOrders | null>(null);
   const { user } = useAuth();
 
   const fetchCurrentOrders = async () => {
@@ -85,9 +95,6 @@ export default function CurrentOrders() {
     fetchCurrentOrders();
   }, []);
 
-  const [selectedOrder, setSelectedOrder] =
-    useState<DonorFormWithOrders | null>(null);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedOrder) return;
 
@@ -107,6 +114,7 @@ export default function CurrentOrders() {
   };
 
   const handleSave = async () => {
+    setIsLoading(true);
     if (!selectedOrder) {
       toast("No details found", {
         description: "Please fill all the details correctly",
@@ -118,7 +126,7 @@ export default function CurrentOrders() {
     let foodImageUrl: string | null = null;
     const file: File | string | null = selectedOrder.food_image;
 
-    // 🧠 Skip upload if not changed
+    // ⬆️ Upload image only if it's a new File
     if (file instanceof File) {
       const fileExt = file.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExt}`;
@@ -152,45 +160,53 @@ export default function CurrentOrders() {
       return;
     }
 
-    // Calculate hours since preparation
-    let hoursSincePrepared = 0;
-    if (selectedOrder.preparation_date_time) {
-      const prepDate = new Date(selectedOrder.preparation_date_time);
-      const now = new Date();
-      hoursSincePrepared = Math.floor(
-        (now.getTime() - prepDate.getTime()) / (1000 * 60 * 60)
-      );
-    }
+    // ⏱ Check if food safety info needs to be re-fetched
+    const original = selectedOrder.original;
+    const prepChanged =
+      selectedOrder.preparation_date_time !== original?.preparation_date_time;
+    const typeChanged = selectedOrder.food_type !== original?.food_type;
+    const storageChanged = selectedOrder.storage !== original?.storage;
 
-    // 🧪 Food Safety API
-    let foodSafetyInfo = null;
-    try {
-      const apiPayload = {
-        foodName: selectedOrder.food_name,
-        storage_type: selectedOrder.storage,
-        hours_since_prepared: hoursSincePrepared,
-      };
+    const shouldCallFoodSafetyAPI =
+      prepChanged || typeChanged || storageChanged;
 
-      console.log("Food Safety API payload:", apiPayload);
-      const apiRes = await axios.post(
-        "https://expiry-prediction.onrender.com/api/food-safety",
-        apiPayload,
-        { headers: { "Content-Type": "application/json" } }
-      );
+    let foodSafetyInfo = selectedOrder.food_safety_info || null;
 
-      console.log("Food Safety API response:", apiRes.data);
-      foodSafetyInfo = apiRes.data;
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
-        console.error(
-          "Food Safety API error:",
-          err.response.status,
-          err.response.data
+    if (shouldCallFoodSafetyAPI) {
+      try {
+        const prepDate = new Date(selectedOrder.preparation_date_time);
+        const now = new Date();
+        const hoursSincePrepared = Math.floor(
+          (now.getTime() - prepDate.getTime()) / (1000 * 60 * 60)
         );
-      } else {
-        console.error("Food Safety API error:", err);
+
+        const apiPayload = {
+          foodName: selectedOrder.food_name,
+          storage_type: selectedOrder.storage,
+          hours_since_prepared: hoursSincePrepared,
+        };
+
+        console.log("Food Safety API payload:", apiPayload);
+        const apiRes = await axios.post(
+          "https://expiry-prediction.onrender.com/api/food-safety",
+          apiPayload,
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        foodSafetyInfo = apiRes.data;
+        console.log("Food Safety API response:", apiRes.data);
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response) {
+          console.error(
+            "Food Safety API error:",
+            err.response.status,
+            err.response.data
+          );
+        } else {
+          console.error("Food Safety API error:", err);
+        }
+        foodSafetyInfo = null;
       }
-      foodSafetyInfo = null;
     }
 
     // 📝 Construct the payload
@@ -219,9 +235,38 @@ export default function CurrentOrders() {
       toast("Update successful", { description: "Order updated successfully" });
       fetchCurrentOrders();
       setSelectedOrder(null);
+      document.getElementById("close-edit-modal")?.click();
     }
+    setIsLoading(false);
   };
 
+  const handleDelete = async () => {
+    setIsLoading(true);
+    if (!selectedOrder) {
+      toast("No details found", {
+        description: "Please fill all the details correctly",
+      });
+      return;
+    }
+    console.log("deleting..");
+
+    const { error } = await supabase
+      .from("donor_form")
+      .delete()
+      .eq("id", selectedOrder.id);
+
+    if (error) {
+      console.error("Delete failed:", error);
+      toast("Failed to delete", { description: error.message });
+    } else {
+      toast("Delete successful", { description: "Order deleted successfully" });
+      fetchCurrentOrders();
+      setSelectedOrder(null);
+      document.getElementById("close-delete-modal")?.click(); // Close modal manually
+    }
+    console.log("deleted.");
+    setIsLoading(false);
+  };
   return (
     <>
       <section className=" px-6 py-10 pt-4">
@@ -242,6 +287,7 @@ export default function CurrentOrders() {
                 <th className="p-4 border border-gray-300">Serves</th>
                 <th className="p-4 border border-gray-300">Storage</th>
                 <th className="p-4 border border-gray-300">Actions</th>
+                <th className="p-4 border border-gray-300">Delete</th>
               </tr>
             </thead>
             <tbody>
@@ -297,15 +343,22 @@ export default function CurrentOrders() {
                       ? "Room Temperature"
                       : "Frozen"}
                   </td>
-                  {/* <td className="p-4 border border-gray-300 ">
-                    <Edit color="red" />
-                  </td> */}
                   <td className="p-4 border">
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
                           variant="ghost"
-                          onClick={() => setSelectedOrder(order)}
+                          onClick={() =>
+                            setSelectedOrder({
+                              ...order,
+                              original: {
+                                preparation_date_time:
+                                  order.preparation_date_time,
+                                food_type: order.food_type,
+                                storage: order.storage,
+                              },
+                            })
+                          }
                         >
                           <Edit className="text-red-500" />
                           Edit
@@ -460,15 +513,86 @@ export default function CurrentOrders() {
 
                           <DialogFooter>
                             <DialogClose asChild>
-                              <Button type="button" variant="secondary">
+                              <Button
+                                id="close-edit-modal"
+                                type="button"
+                                variant="secondary"
+                                onClick={() => setIsLoading(false)}
+                              >
                                 Cancel
                               </Button>
                             </DialogClose>
+                            <Button
+                              type="button"
+                              onClick={handleSave}
+                              disabled={isLoading}
+                            >
+                              {isLoading ? "Saving..." : "Save"}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      )}
+                    </Dialog>
+                  </td>
+                  <td className="p-4 border">
+                    <Dialog
+                      open={isOpen}
+                      onOpenChange={(open) => {
+                        setIsOpen(open);
+                        if (!open) {
+                          setIsLoading(false);
+                          setSelectedOrder(null);
+                        }
+                      }}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setSelectedOrder({
+                              ...order,
+                              original: {
+                                preparation_date_time:
+                                  order.preparation_date_time,
+                                food_type: order.food_type,
+                                storage: order.storage,
+                              },
+                            });
+                            setIsOpen(true);
+                          }}
+                        >
+                          <Trash2 className="text-red-500" />
+                          Delete
+                        </Button>
+                      </DialogTrigger>
+                      {selectedOrder?.id === order.id && (
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Delete Donation</DialogTitle>
+                          </DialogHeader>
+
+                          <div className="space-y-4 py-4">
+                            Are you sure you want to delete this donation??
+                          </div>
+
+                          <DialogFooter>
                             <DialogClose asChild>
-                              <Button type="button" onClick={handleSave}>
-                                Save
+                              <Button
+                                id="close-delete-modal"
+                                type="button"
+                                variant="secondary"
+                                onClick={() => setIsLoading(false)}
+                              >
+                                Cancel
                               </Button>
                             </DialogClose>
+                            <Button
+                              type="button"
+                              onClick={handleDelete}
+                              disabled={isLoading}
+                            >
+                              {isLoading ? "Deleting..." : "Delete"}
+                            </Button>
                           </DialogFooter>
                         </DialogContent>
                       )}
