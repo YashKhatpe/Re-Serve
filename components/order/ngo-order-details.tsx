@@ -30,7 +30,7 @@ export function NgoOrderDetails() {
         router.push("/login");
         return;
       }
-      setUserId(user.id);
+      setUserId(user?.id);
     }
     checkAuth();
   }, [router]);

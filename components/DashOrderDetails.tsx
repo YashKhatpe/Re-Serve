@@ -37,6 +37,7 @@ export default function DashOrderDetails() {
     }
 
     const fetchOrders = async () => {
+      if (!user?.id) return;
       const { data, error } = await supabase
         .from("orders")
         .select(

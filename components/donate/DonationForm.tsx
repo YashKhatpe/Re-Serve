@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -46,6 +45,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
 
     try {
       let foodImageUrl = null;
+      console.log("In try block");
       // Upload image to Supabase Storage if a file is selected
       if (!formData) {
         toast("No details found", {
@@ -54,6 +54,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
         return;
       }
       const file = formData.foodImage;
+      console.log("food img: ", file);
       if (!file) {
         toast("No image selected", {
           description: "Please select a food image before submitting.",
@@ -62,13 +63,14 @@ const DonationForm: React.FC<DonationFormProps> = ({
       }
       const fileExt = file.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExt}`;
-
+      console.log("waiting");
       const { error: uploadError } = await supabase.storage
         .from("food_image")
         .upload(fileName, file, { cacheControl: "3600", upsert: false });
 
+      console.log("waiting over");
       if (uploadError) throw uploadError;
-
+      console.log("File Name: ", fileName);
       // Get the public URL for the uploaded file
       const { data: publicUrlData } = supabase.storage
         .from("food_image")
@@ -76,8 +78,10 @@ const DonationForm: React.FC<DonationFormProps> = ({
 
       if (publicUrlData) {
         foodImageUrl = publicUrlData.publicUrl;
+        console.log("File Url: ", foodImageUrl);
       }
 
+      console.log("Calling Api...");
       // 1. Call Food Safety API
       // Calculate hours since prepared
       let hoursSincePrepared = 0;
@@ -98,7 +102,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
         );
         // Try both snake_case and camelCase for debugging
         const apiPayload = {
-          food_name: formData.foodName,
+          // food_name: formData.foodName,
           foodName: formData.foodName,
           storage_type: formData.storageType,
           hours_since_prepared: hoursSincePrepared,
@@ -141,18 +145,24 @@ const DonationForm: React.FC<DonationFormProps> = ({
         serves: Number(formData.servings), // Ensure this is a number
         storage: formData.storageType,
         preferred_pickup_time: formData.pickupTime,
-        donor_id: user.id,
+        donor_id: user?.id,
         created_at: new Date().toISOString(),
         food_safety_info: foodSafetyInfo,
       };
       console.log("Supabase insert payload:", insertPayload);
       const { error } = await supabase.from("donor_form").insert(insertPayload);
-      if (error)
+      if (error) {
         console.error(
           "Supabase insert error:",
           error,
           JSON.stringify(error, null, 2)
         );
+        toast("Donation Creation Unsuccessful", {
+          description:
+            "Failed to donate your food. Please check the form details",
+        });
+        return;
+      }
 
       toast("Donation Created", {
         description: "Your food donation has been listed successfully.",
@@ -293,7 +303,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
                 <option value="">Select storage type</option>
                 <option value="refrigerated">Refrigerated</option>
                 <option value="frozen">Frozen</option>
-                <option value="room-temperature">Room Temperature</option>
+                <option value="room_temp">Room Temperature</option>
               </select>
             </div>
           </div>

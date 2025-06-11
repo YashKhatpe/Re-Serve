@@ -104,158 +104,128 @@ export default function LoginPage() {
   }
 
   return (
-    <>
-      {/* Full-screen Loader during redirect */}
-      {isRedirecting && (
-  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3] px-4">
-    {/* Orange glow effect behind logo */}
-    <div className="absolute w-64 h-64 bg-[#FF6B35] opacity-20 blur-3xl rounded-full z-0"></div>
-
-    {/* Spinning sparkle in the top right corner */}
-    <div className="absolute top-10 right-10 animate-spin-slow z-0 opacity-30">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="48"
-        height="48"
-        fill="#FF6B35"
-        viewBox="0 0 24 24"
-      >
-        <path d="M12 0l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" />
-      </svg>
-    </div>
-
-    <div className="relative z-10 flex flex-col items-center text-center space-y-4">
-      <div className="h-20 w-20 rounded-full bg-white shadow-lg flex items-center justify-center">
-        <Image src="/navlogo.png" alt="Logo" width={48} height={48} priority />
-      </div>
-      <h2 className="text-2xl font-bold text-[#2D3748] mt-2">Logging you in...</h2>
-      <p className="text-[#718096]">Please wait while we log you into your dashboard.</p>
-
-      {/* Rotating arrow loader */}
-      <svg
-        className="h-8 w-8 text-[#FF6B35] animate-spin mx-auto mt-6"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
-        />
-      </svg>
-    </div>
-  </div>
-)}
-
-
-      <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3] flex flex-col">
-
-        {/* Main content */}
-        <main className="flex-1 flex items-center justify-center p-6">
-          <div className="flex flex-col md:flex-row gap-8 items-center justify-center max-w-4xl w-full">
-            <div className="w-full md:w-1/2 hidden md:block">
-              <div className="relative h-[400px] w-full rounded-lg overflow-hidden shadow-lg">
-                <Image
-                  src="/login.png"
-                  alt="Food donation"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-                  <h2 className="text-white text-2xl font-bold">
-                    Making a difference, one donation at a time
-                  </h2>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3] flex items-center justify-center">
+      <div className="container mx-auto px-6 py-12">
+        <div className="flex flex-col lg:flex-row gap-12 items-center justify-around min-h-[70vh]">
+          {/* Left Side - Hero Content */}
+          <div className="hidden lg:block w-full lg:w-1/2 space-y-6 ">
+            <div className="space-y-2">
+              <h1 className="text-4xl lg:text-5xl font-bold text-[#2D3748] leading-tight">
+                Welcome Back to <span className="text-[#FF6B35]">Re-Serve</span>
+              </h1>
+              <p className="text-lg text-[#718096] leading-relaxed max-w-lg">
+                Snue your mission of reducing food waste and serving those in
+                need. Together, we make every meal matter.
+              </p>
+              <div className="mt-4 text-sm text-gray-600 ">
+                New here?{" "}
+                <Link
+                  href="/register"
+                  className="text-[#FF6B35] font-semibold hover:underline px-2"
+                >
+                  <button className="w-24 h-8 bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl font-medium text-base shadow-lg hover:shadow-xl transition-all">
+                    Register
+                  </button>
+                </Link>
               </div>
             </div>
 
-            <div className="w-full md:w-1/2">
-              <Card className="border shadow-md">
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl font-bold">
-                    Welcome Back
-                  </CardTitle>
-                  <CardDescription>
-                    Sign in to your account to continue your mission
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...form}>
-                    <form
-                      onSubmit={form.handleSubmit(onSubmit)}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter your email"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+            {/* Stats */}
+            <div className="flex flex-wrap gap-8 ">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-[#FF6B35]">500+</div>
+                <div className="text-sm text-[#718096]">Meals Served</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-[#FF6B35]">50+</div>
+                <div className="text-sm text-[#718096]">Partner NGOs</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-[#FF6B35]">25+</div>
+                <div className="text-sm text-[#718096]">Restaurants</div>
+              </div>
+            </div>
 
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="password"
-                                placeholder="Enter your password"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button
-                        type="submit"
-                        className="w-full bg-[#FF6B35] hover:bg-[#E55A2B] text-white rounded-xl py-2 font-medium text-base shadow-md hover:shadow-lg transition-all"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Signing in..." : "Sign In"}
-                      </Button>
-                    </form>
-                  </Form>
-
-                  <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600">
-                      Don't have an account?{" "}
-                      <Link
-                        href="/register"
-                        className="text-[#FF6B35] font-medium hover:underline"
-                      >
-                        Register here
-                      </Link>
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Decorative Elements */}
+            <div className="relative hidden lg:block">
+              <div className="absolute -top-4 -right-4 w-16 h-16 bg-[#FED7D7] rounded-full opacity-60"></div>
+              <div className="absolute top-8 -right-8 w-8 h-8 bg-[#C6F6D5] rounded-full opacity-80"></div>
+              <div className="absolute -top-8 right-4 w-12 h-12 bg-[#FEFCBF] rounded-full opacity-70"></div>
             </div>
           </div>
-        </main>
+
+          {/* Right Side - Login Form */}
+          <div className="w-full lg:w-1/2 max-w-md mx-auto">
+            <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-bold text-[#2D3748]">
+                  Login
+                </CardTitle>
+                <CardDescription className="text-[#718096]">
+                  Sign in to your account to continue your mission
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[#4A5568] font-medium">
+                            Email
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your email"
+                              {...field}
+                              className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[#4A5568] font-medium">
+                            Password
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="Enter your password"
+                              {...field}
+                              className="rounded-xl border-[#E8E5E1] bg-white/70 focus:border-[#FF6B35] focus:ring-[#FF6B35] transition-colors"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl font-medium text-base shadow-lg hover:shadow-xl transition-all"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Logging in..." : "Login"}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

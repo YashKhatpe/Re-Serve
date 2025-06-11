@@ -22,11 +22,18 @@ export function AppSidebar({ setActiveComponent, userType }: AppSidebarProps) {
       icon: LayoutDashboard,
       componentId: "dashboard",
     },
-    userType == "donor" && {
+    userType === "donor" && {
       title: "Generate Receipt",
       url: "/generate-receipt",
       icon: Receipt,
       componentId: "generate-receipt",
+    },
+
+    userType === "donor" && {
+      title: "Live donations",
+      url: "/current-orders",
+      icon: ShoppingCart,
+      componentId: "current-orders",
     },
     {
       title: "Orders",

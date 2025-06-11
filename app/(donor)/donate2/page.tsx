@@ -72,7 +72,7 @@ export default function DonatePage() {
         return;
       }
 
-      setUserId(user.id);
+      setUserId(user?.id);
     }
 
     checkAuth();

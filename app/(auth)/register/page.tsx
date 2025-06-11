@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -82,6 +82,14 @@ const ngoFormSchema = z
   });
 
 export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterPageContent />
+    </Suspense>
+  );
+}
+
+function RegisterPageContent() {
   const [activeTab, setActiveTab] = useState("donor");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -170,8 +178,10 @@ export default function RegisterPage() {
             total_ratings: 0,
           });
 
-          if (donorError) throw donorError;
-
+          if (donorError) {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+            throw donorError;
+          }
           toast("Registration successful!", {
             description: "You can now log in to your donor account.",
           });
@@ -218,8 +228,10 @@ export default function RegisterPage() {
           created_at: new Date(),
         });
 
-        if (ngoError) throw ngoError;
-
+        if (ngoError) {
+          await supabase.auth.admin.deleteUser(authData.user.id);
+          throw ngoError;
+        }
         toast("Registration successful!", {
           description: "You can now log in to your NGO account.",
         });
@@ -242,10 +254,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3]">
-      {/* Main Content */}
+    <div className="min-h-screen max-h-screen bg-gradient-to-br from-[#F5F3F0] via-[#FDF8F5] to-[#F9F6F3] overflow-hidden flex items-center justify-center">
       <div className="container mx-auto px-6 py-12">
-        <div className="flex flex-col lg:flex-row gap-12 items-center">
+        <div className="flex flex-col lg:flex-row gap-12 items-center justify-center min-h-[70vh]">
           {/* Left Side - Hero Content */}
           <div className="hidden lg:block w-full lg:w-1/2 space-y-6 ">
             <div className="space-y-2">
@@ -297,6 +308,7 @@ export default function RegisterPage() {
 
           {/* Right Side - Registration Form */}
           <div className="w-full lg:w-1/2 max-w-md mx-auto">
+            <BackButton />
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
@@ -319,16 +331,13 @@ export default function RegisterPage() {
 
               {/* Donor Form */}
               <TabsContent value="donor">
-                <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
+                <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl max-h-[80vh] flex flex-col">
                   <CardHeader className="">
-                    {/* <div className="flex"> */}
-                    <BackButton />
                     <CardTitle className="text-2xl font-bold text-[#2D3748] text-center">
                       Register as a Donor
                     </CardTitle>
-                    {/* </div> */}
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-6 overflow-y-auto">
                     <Form {...donorForm}>
                       <form
                         onSubmit={donorForm.handleSubmit(onDonorSubmit)}
@@ -554,16 +563,13 @@ export default function RegisterPage() {
 
               {/* NGO Form */}
               <TabsContent value="ngo">
-                <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">
+                <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl max-h-[80vh] flex flex-col">
                   <CardHeader className="">
-                    {/* <div className="flex"> */}
-                    <BackButton />
                     <CardTitle className="text-2xl font-bold text-[#2D3748] text-center">
                       Register as an NGO
                     </CardTitle>
-                    {/* </div> */}
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-6 overflow-y-auto">
                     <Form {...ngoForm}>
                       <form
                         onSubmit={ngoForm.handleSubmit(onNgoSubmit)}

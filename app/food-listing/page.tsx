@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import audioBufferToWav from "audiobuffer-to-wav";
 import { calculateDistance, extractLocationFromMapUrl } from "@/lib/mapUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/context/auth-context";
 
 export default function FoodListingPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export default function FoodListingPage() {
     lng: number;
   } | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [ngoFoodPreferences, setNgoFoodPreferences] = useState<string[]>([]);
 
   useEffect(() => {
     async function checkAuth() {
@@ -77,39 +79,51 @@ export default function FoodListingPage() {
   }, [router]);
 
   useEffect(() => {
-    async function getUserLocation() {
-      // If user is an NGO, try to get location from their address_map_link
+    async function getUserLocationAndPreferences() {
+      // If user is an NGO, try to get location and food_preference from their profile
       if (userType === "ngo" && userId) {
         try {
           const { data: ngoData, error: ngoError } = await supabase
             .from("ngo")
-            .select("address_map_link")
+            .select("address_map_link, food_preference")
             .eq("id", userId)
             .single();
 
           if (ngoError) {
             console.error("Error fetching NGO data:", ngoError.details);
-          } else if (ngoData && ngoData.address_map_link) {
-            // Extract coordinates from the map URL
-            const locationResult = extractLocationFromMapUrl(
-              ngoData.address_map_link
-            );
-            if (locationResult.location) {
-              console.log(
-                "Using NGO location from address_map_link:",
-                locationResult.location
+          } else if (ngoData) {
+            // Set location if available
+            if (ngoData.address_map_link) {
+              const locationResult = extractLocationFromMapUrl(
+                ngoData.address_map_link
               );
-              setUserLocation(locationResult.location);
-              return; // Exit early as we've set the location
+              if (locationResult.location) {
+                setUserLocation(locationResult.location);
+              }
+            }
+            // Set food preferences if available
+            if (ngoData.food_preference) {
+              // If stored as array, use directly; if string, convert to array
+              let prefs = ngoData.food_preference;
+              if (typeof prefs === "string") {
+                try {
+                  prefs = JSON.parse(prefs);
+                } catch {
+                  prefs = [prefs];
+                }
+              }
+              setNgoFoodPreferences(prefs);
+              setSelectedFoodTypes(prefs); // Pre-select filters
             }
           }
         } catch (error) {
-          console.error("Error processing NGO location:", error);
+          console.error("Error processing NGO location/preferences:", error);
         }
+        return;
       }
     }
-
-    getUserLocation();
+    getUserLocationAndPreferences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, userType]);
 
   useEffect(() => {
@@ -191,8 +205,13 @@ export default function FoodListingPage() {
       );
     }
 
-    // Apply food type filter
-    if (selectedFoodTypes.length > 0) {
+    // If user is NGO and has preferences, always filter by those
+    if (userType === "ngo" && ngoFoodPreferences.length > 0) {
+      filtered = filtered.filter((donation) =>
+        ngoFoodPreferences.includes(donation.food_type)
+      );
+    } else if (selectedFoodTypes.length > 0) {
+      // Otherwise, use manual filter
       filtered = filtered.filter((donation) =>
         selectedFoodTypes.includes(donation.food_type)
       );
@@ -212,11 +231,19 @@ export default function FoodListingPage() {
       selectedFoodTypes,
       maxDistance,
     });
-  }, [searchTerm, selectedFoodTypes, maxDistance, donations, userLocation]);
+  }, [
+    searchTerm,
+    selectedFoodTypes,
+    maxDistance,
+    donations,
+    userLocation,
+    userType,
+    ngoFoodPreferences,
+  ]);
 
   const handleCardClick = (donation: Donation) => {
     setSelectedDonation(donation);
-    router.push("/products");
+    router.push(`/products/${donation.id}`);
   };
   const toggleFoodType = (type: string) => {
     setSelectedFoodTypes((prev) =>
@@ -225,6 +252,7 @@ export default function FoodListingPage() {
   };
 
   const handleVoiceQuery = async () => {
+    if (isDialogOpen || isLoading || isRecording) return; // Prevent multiple triggers
     setUserQuery("");
     setIsDialogOpen(true);
   };
@@ -381,10 +409,8 @@ export default function FoodListingPage() {
           const filters = await sendTextToGemini(result.transcript);
           const data = await queryDonorForm(filters); // parsed from Gemini
           const enriched = await enrichDonationData(data);
-          // setDonations(enriched);
           setFilteredDonations(enriched);
 
-          // setFilteredDonations(data);
           console.log("Final Data: ", data);
         } else {
           setError("Error uploading audio to server");
@@ -393,6 +419,10 @@ export default function FoodListingPage() {
     } catch (err) {
       console.error("Error sending audio:", err);
       setError("Error processing or sending audio");
+    } finally {
+      setIsDialogOpen(false);
+      setIsLoading(false);
+      setIsRecording(false);
     }
   };
 
@@ -583,6 +613,7 @@ export default function FoodListingPage() {
                   <Button
                     onClick={handleVoiceQuery}
                     className="bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-full px-6 py-3 font-medium transition-all shadow-lg hover:shadow-xl"
+                    disabled={isDialogOpen || isLoading || isRecording}
                   >
                     Try Voice Query
                   </Button>
@@ -765,12 +796,12 @@ export default function FoodListingPage() {
                             <p className="text-[#718096] mb-3">
                               Serves {donation.serves} people
                             </p>
-                            <p className="text-[#4A5568] mb-3">
+                            {/* <p className="text-[#4A5568] mb-3">
                               Expires:{" "}
                               {new Date(
                                 donation.expiry_date_time
                               ).toLocaleString()}
-                            </p>
+                            </p> */}
                             {donation.distance > 0 && (
                               <div className="flex items-center text-[#718096]">
                                 <MapPin
@@ -823,7 +854,7 @@ export default function FoodListingPage() {
         <Dialog
           open={isDialogOpen}
           onOpenChange={(open) => {
-            if (!open) {
+            if (!open && !isLoading && !isRecording) {
               stopRecording();
               setIsDialogOpen(false);
             }

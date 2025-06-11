@@ -17,9 +17,5 @@ export default function DonationLayout({ children }: DonationLayoutProps) {
     }
   }, [user, userType, loading, router]);
 
-  //   if (loading) {
-  //     return <div className="p-6 text-center">Loading...</div>; // Optional spinner
-  //   }
-
   return <>{children}</>;
 }

@@ -1,18 +1,21 @@
 "use client";
 import { useAuth } from "@/context/auth-context";
-import { redirect } from "next/navigation";
-import { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { ReactNode, useEffect } from "react";
 
 interface FoodListingProps {
   children: ReactNode;
 }
 
 export default function FoodListingLayout({ children }: FoodListingProps) {
-  const { user, userType } = useAuth();
+  const { user, userType, loading } = useAuth();
+  const router = useRouter();
 
-  if (!user || userType == "donor") {
-    redirect("/register?tab=ngo");
-  }
+  useEffect(() => {
+    if (!loading && (!user || userType === "donor")) {
+      router.replace("/register?tab=donor");
+    }
+  }, [user, userType, loading, router]);
 
   return <>{children}</>;
 }
