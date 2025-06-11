@@ -15,10 +15,12 @@ export function Navbar() {
         transition={{ duration: 0.6 }}
         className="flex items-center space-x-2"
       >
-        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-lg">R</span>
-        </div>
-        <span className="text-2xl font-bold text-gray-800">Re-Serve</span>
+        <Link href="/" className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">R</span>
+          </div>
+          <span className="text-2xl font-bold text-gray-800">Re-Serve</span>
+        </Link>
       </motion.div>
       <motion.div
         initial={{ opacity: 0, x: 20 }}

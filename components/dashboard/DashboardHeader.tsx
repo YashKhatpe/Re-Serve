@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 const DashboardHeader = () => {
   return (
@@ -16,12 +17,12 @@ const DashboardHeader = () => {
           {/* Left side - Sidebar trigger and Logo */}
           <div className="flex items-center space-x-4">
             <SidebarTrigger className="text-gray-600 hover:text-orange-500 transition-colors" />
-            <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">R</span>
               </div>
               <span className="text-xl font-bold text-gray-800">Re-Serve</span>
-            </div>
+            </Link>
           </div>
 
           {/* Navigation - Hidden on smaller screens since sidebar handles it */}
