@@ -18,6 +18,7 @@ export type Donation = {
     lat: number;
     lng: number;
   };
+  food_safety_info?: any;
 };
 
 type DonationContextType = {

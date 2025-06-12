@@ -27,14 +27,14 @@ export default function ReceiptHistory() {
 
   return (
     <div className="p-4 my-6">
-      <h2 className="text-xl font-bold mb-4">Your Donation Receipts</h2>
+      <h2 className="text-xl font-bold mb-4">Your Order History</h2>
       <table className="min-w-full border-2 border-orange-500 rounded-xl">
         <thead className="bg-orange-500 text-white">
           <tr>
             <th className="text-center px-4 py-2 border-2 border-orange-500">
               Food Name
             </th>
-            <th className="text-center px-4 py-2">Receipt Generated On</th>
+            <th className="text-center px-4 py-2">Order Created On</th>
             <th className="text-center px-4 py-2">Amount</th>
           </tr>
         </thead>

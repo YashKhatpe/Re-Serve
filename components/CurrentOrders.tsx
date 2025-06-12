@@ -268,6 +268,16 @@ export default function CurrentOrders() {
       return;
     }
     try {
+      // 1. Delete receipts referencing this order
+      await retryAsync(async () => {
+        const { error } = await supabase
+          .from("receipts")
+          .delete()
+          .eq("order_id", selectedOrder.id);
+        if (error) throw error;
+      });
+
+      // 2. Delete the order itself
       await retryAsync(async () => {
         const { error } = await supabase
           .from("donor_form")
@@ -275,6 +285,7 @@ export default function CurrentOrders() {
           .eq("id", selectedOrder.id);
         if (error) throw error;
       });
+
       toast("Delete successful", { description: "Order deleted successfully" });
       fetchCurrentOrders();
       setSelectedOrder(null);
