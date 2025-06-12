@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { NgoOrderDetails } from "@/components/order/ngo-order-details";
 import { useAuth } from "@/context/auth-context";
 import { DashNavbar } from "@/components/DashNavbar";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 type Orders = {
   id: string;
   serves: number;
@@ -20,6 +19,7 @@ type Orders = {
 };
 
 export default function OrderDetailsPage() {
+  const supabase = createClient();
   // const [userType, setUserType] = useState<"donor" | "ngo" | null>(null);
   const [filter, setFilter] = useState<string>("ALL");
   const [orders, setOrders] = useState<Orders[]>([]);

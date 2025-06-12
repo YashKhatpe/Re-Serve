@@ -6,9 +6,9 @@ import { Button } from "../ui/button";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { createClient } from "@/lib/supabase/client";
 
 interface DonationFormProps {
   formData: {
@@ -30,6 +30,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
   updateFormField,
   updateImageField,
 }) => {
+  const supabase = createClient();
   const router = useRouter();
   const { user } = useAuth();
 
@@ -63,17 +64,31 @@ const DonationForm: React.FC<DonationFormProps> = ({
       }
       const fileExt = file.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExt}`;
+      console.log("File type:", typeof file);
+      console.log("File instanceof File:", file instanceof File);
+      console.log("File.name:", file.name);
+      console.log("File.size:", file.size);
+
       console.log("waiting");
-      const { error: uploadError } = await supabase.storage
-        .from("food_image")
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("food-image")
         .upload(fileName, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) {
+        console.error("Upload Error:", uploadError);
+        toast("Image Upload Failed", { description: uploadError.message });
+        return;
+      }
+
+      console.log("Upload Success", uploadData);
 
       console.log("waiting over");
       if (uploadError) throw uploadError;
       console.log("File Name: ", fileName);
       // Get the public URL for the uploaded file
       const { data: publicUrlData } = supabase.storage
-        .from("food_image")
+        .from("food-image")
         .getPublicUrl(fileName);
 
       if (publicUrlData) {
@@ -177,6 +192,208 @@ const DonationForm: React.FC<DonationFormProps> = ({
     }
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   console.log("Form submitted:", formData);
+
+  //   if (!user?.id) {
+  //     toast("Auth Error", {
+  //       description: "You must be logged in to donate food.",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     let foodImageUrl = null;
+  //     console.log("In try block");
+
+  //     // Upload image to Supabase Storage if a file is selected
+  //     if (!formData) {
+  //       toast("No details found", {
+  //         description: "Please fill all the details correctly",
+  //       });
+  //       return;
+  //     }
+
+  //     const file = formData.foodImage;
+  //     console.log("food img: ", file);
+  //     console.log("File type:", typeof file);
+  //     console.log("File instanceof File:", file instanceof File);
+
+  //     if (!file) {
+  //       toast("No image selected", {
+  //         description: "Please select a food image before submitting.",
+  //       });
+  //       return;
+  //     }
+
+  //     // Additional file validation
+  //     if (!(file instanceof File)) {
+  //       console.error("File is not a File instance:", file);
+  //       toast("Invalid file", {
+  //         description: "Please select a valid image file.",
+  //       });
+  //       return;
+  //     }
+
+  //     console.log("File.name:", file.name);
+  //     console.log("File.size:", file.size);
+  //     console.log("File.type:", file.type);
+
+  //     const fileExt = file.name.split(".").pop();
+  //     const fileName = `${uuidv4()}.${fileExt}`;
+
+  //     console.log("Generated fileName:", fileName);
+  //     console.log("About to upload to Supabase...");
+
+  //     // Add timeout to the upload operation
+  //     const uploadPromise = supabase.storage
+  //       .from("food_image")
+  //       .upload(fileName, file, {
+  //         cacheControl: "3600",
+  //         upsert: false,
+  //       });
+
+  //     // Add a timeout wrapper
+  //     const timeoutPromise = new Promise((_, reject) => {
+  //       setTimeout(
+  //         () => reject(new Error("Upload timeout after 30 seconds")),
+  //         30000
+  //       );
+  //     });
+
+  //     console.log("Starting upload with timeout...");
+
+  //     const { data: uploadData, error: uploadError } = (await Promise.race([
+  //       uploadPromise,
+  //       timeoutPromise,
+  //     ])) as any;
+
+  //     console.log("Upload completed. Data:", uploadData, "Error:", uploadError);
+
+  //     if (uploadError) {
+  //       console.error("Upload Error:", uploadError);
+  //       toast("Image Upload Failed", {
+  //         description: uploadError.message || "Failed to upload image",
+  //       });
+  //       return;
+  //     }
+
+  //     console.log("Upload Success", uploadData);
+
+  //     // Get the public URL for the uploaded file
+  //     const { data: publicUrlData } = supabase.storage
+  //       .from("food_image")
+  //       .getPublicUrl(fileName);
+
+  //     if (publicUrlData) {
+  //       foodImageUrl = publicUrlData.publicUrl;
+  //       console.log("File Url: ", foodImageUrl);
+  //     }
+
+  //     console.log("Calling Food Safety API...");
+
+  //     // Calculate hours since prepared
+  //     let hoursSincePrepared = 0;
+  //     if (formData.preparationDate) {
+  //       const prepDate = new Date(formData.preparationDate);
+  //       const now = new Date();
+  //       hoursSincePrepared = Math.floor(
+  //         (now.getTime() - prepDate.getTime()) / (1000 * 60 * 60)
+  //       );
+  //     }
+
+  //     let foodSafetyInfo = null;
+  //     try {
+  //       console.log(
+  //         "food_name value:",
+  //         formData.foodName,
+  //         typeof formData.foodName
+  //       );
+
+  //       const apiPayload = {
+  //         foodName: formData.foodName,
+  //         storage_type: formData.storageType,
+  //         hours_since_prepared: hoursSincePrepared,
+  //       };
+
+  //       console.log("Food Safety API payload:", apiPayload);
+
+  //       const apiRes = await axios.post(
+  //         "https://expiry-prediction.onrender.com/api/food-safety",
+  //         apiPayload,
+  //         {
+  //           headers: { "Content-Type": "application/json" },
+  //           timeout: 10000, // 10 second timeout
+  //         }
+  //       );
+
+  //       console.log("Food Safety API response:", apiRes.data);
+  //       foodSafetyInfo = apiRes.data;
+  //     } catch (err) {
+  //       if (axios.isAxiosError(err) && err.response) {
+  //         console.error(
+  //           "Food Safety API error:",
+  //           err.response.status,
+  //           err.response.data
+  //         );
+  //       } else {
+  //         console.error("Food Safety API error:", err);
+  //       }
+  //       foodSafetyInfo = null;
+  //     }
+
+  //     console.log(
+  //       "After Food Safety API call, foodSafetyInfo:",
+  //       foodSafetyInfo
+  //     );
+
+  //     // Insert into Supabase with food_safety_info
+  //     const uniqueId = uuidv4();
+  //     const insertPayload = {
+  //       id: uniqueId,
+  //       food_name: formData.foodName,
+  //       food_image: foodImageUrl,
+  //       preparation_date_time: new Date(formData.preparationDate).toISOString(),
+  //       food_type: formData.foodType,
+  //       serves: Number(formData.servings),
+  //       storage: formData.storageType,
+  //       preferred_pickup_time: formData.pickupTime,
+  //       donor_id: user?.id,
+  //       created_at: new Date().toISOString(),
+  //       food_safety_info: foodSafetyInfo,
+  //     };
+
+  //     console.log("Supabase insert payload:", insertPayload);
+
+  //     const { error } = await supabase.from("donor_form").insert(insertPayload);
+
+  //     if (error) {
+  //       console.error(
+  //         "Supabase insert error:",
+  //         error,
+  //         JSON.stringify(error, null, 2)
+  //       );
+  //       toast("Donation Creation Unsuccessful", {
+  //         description:
+  //           "Failed to donate your food. Please check the form details",
+  //       });
+  //       return;
+  //     }
+
+  //     toast("Donation Created", {
+  //       description: "Your food donation has been listed successfully.",
+  //     });
+
+  //     router.push("/dashboard");
+  //   } catch (error: any) {
+  //     console.error("Catch block error:", error);
+  //     toast("Error Creating Donation", {
+  //       description:
+  //         error.message || "Could not create your donation. Please try again.",
+  //     });
+  //   }
+  // };
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     updateImageField("foodImage", file);

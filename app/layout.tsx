@@ -7,6 +7,9 @@ import { DonationProvider } from "@/context/donation-context";
 import { AuthProvider } from "@/context/auth-context";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Navbar } from "@/components/Navbar";
+import AuthWrapper from "@/components/AuthWrapper";
+import { NavigationProvider } from "@/context/NavigationContext";
+import GlobalLoader from "@/components/GlobalLoader";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -23,17 +26,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider>
+        <AuthWrapper>
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
             enableSystem
             disableTransitionOnChange
           >
-            <DonationProvider>{children}</DonationProvider>
-            <Toaster />
+            <NavigationProvider>
+              <GlobalLoader />
+              <DonationProvider>{children}</DonationProvider>
+              <Toaster />
+            </NavigationProvider>
           </ThemeProvider>
-        </AuthProvider>
+        </AuthWrapper>
       </body>
     </html>
   );

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type Orders = {
   id: string;
@@ -17,6 +17,7 @@ type Orders = {
 };
 
 export default function NGOOrderDetailsPage() {
+  const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Orders[]>([]);
   const [otpInput, setOtpInput] = useState<{ [key: string]: string }>({});

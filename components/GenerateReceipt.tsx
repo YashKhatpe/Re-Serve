@@ -13,6 +13,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calender";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import ReceiptHistory from "./dashboard/ReceiptHistory";
+import { toast } from "sonner";
 
 export default function GenerateReceipt() {
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,9 @@ export default function GenerateReceipt() {
 
   const handleGenerateReceipts = async () => {
     if (!startDate || !endDate) {
-      alert("Please select both start and end dates");
+      toast("Invalid details", {
+        description: "Please select both start and end dates",
+      });
       return;
     }
 
@@ -39,7 +42,9 @@ export default function GenerateReceipt() {
       );
     } catch (error) {
       console.error("Error generating receipts:", error);
-      alert("Failed to generate tax receipts. Please try again.");
+      toast("Error!!!", {
+        description: "Failed to generate tax receipts. Please try again.",
+      });
     }
     setLoading(false);
   };

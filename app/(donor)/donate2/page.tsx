@@ -25,12 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
 import { FOOD_PREFERENCES, STORAGE_OPTIONS } from "@/lib/constants";
 import { ArrowLeft, ImageIcon } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 const donationFormSchema = z.object({
   food_name: z
@@ -55,6 +55,7 @@ const donationFormSchema = z.object({
 });
 
 export default function DonatePage() {
+  const supabase = createClient();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -113,14 +114,14 @@ export default function DonatePage() {
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("food_image")
+        .from("food-image")
         .upload(fileName, file, { cacheControl: "3600", upsert: false });
 
       if (uploadError) throw uploadError;
 
       // Get the public URL for the uploaded file
       const { data: publicUrlData } = supabase.storage
-        .from("food_image")
+        .from("food-image")
         .getPublicUrl(fileName);
 
       if (publicUrlData) {

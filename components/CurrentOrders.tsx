@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/context/auth-context";
-import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { Delete, Edit, Trash, Trash2 } from "lucide-react";
 import {
@@ -27,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import { createClient } from "@/lib/supabase/client";
 
 type Order = {
   id: string;
@@ -53,6 +53,7 @@ type DonorFormWithOrders = {
 };
 
 export default function CurrentOrders() {
+  const supabase = createClient();
   const [orders, setOrders] = useState<DonorFormWithOrders[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -148,7 +149,7 @@ export default function CurrentOrders() {
       try {
         await retryAsync(async () => {
           const { error: uploadError } = await supabase.storage
-            .from("food_image")
+            .from("food-image")
             .upload(fileName, file, {
               cacheControl: "3600",
               upsert: false,
@@ -164,7 +165,7 @@ export default function CurrentOrders() {
         return;
       }
       const { data: publicUrlData } = supabase.storage
-        .from("food_image")
+        .from("food-image")
         .getPublicUrl(fileName);
       foodImageUrl = publicUrlData?.publicUrl ?? "";
     } else if (typeof file === "string") {

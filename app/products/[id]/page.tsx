@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Clock, Sprout, ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
-import Image from "next/image";
 import { useDonation } from "@/context/donation-context";
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
@@ -17,13 +16,13 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { Volume2 } from "lucide-react";
 import axios from "axios";
-import { Erica_One } from "next/font/google";
 import { extractLocationFromMapUrl, calculateDistance } from "@/lib/mapUtils";
+import { useAuth } from "@/context/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 // Define the type for the food safety API response
 interface FoodSafetyInfo {
@@ -42,6 +41,7 @@ interface FoodSafetyInfo {
 }
 
 export default function ProductDetailPage() {
+  const supabase = createClient();
   const { selectedDonation, setSelectedDonation } = useDonation();
   const [isOpen, setIsOpen] = useState(false);
   const [otp, setOtp] = useState("");
@@ -62,6 +62,7 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const donationId = params.id;
+  const { user } = useAuth();
 
   // Add userLocation state (if not already present)
   const [userLocation, setUserLocation] = useState<{
@@ -175,30 +176,6 @@ export default function ProductDetailPage() {
           setIsExpired(false);
         }
       }
-      // } else {
-      //   // fallback to DB expiry
-      //   const dbExpiry = selectedDonation?.expiry_date_time
-      //     ? new Date(selectedDonation.expiry_date_time)
-      //     : null;
-      //   if (!dbExpiry) {
-      //     setExpiryCountdown("1");
-      //     setIsExpired(true);
-      //     return;
-      //   }
-      //   const diffMs = dbExpiry.getTime() - now.getTime();
-      //   if (diffMs <= 0) {
-      //     setExpiryCountdown("Expired");
-      //     setIsExpired(true);
-      //   } else {
-      //     const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-      //     const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      //     let text = "";
-      //     if (diffHrs > 0) text += `${diffHrs} hour${diffHrs > 1 ? "s" : ""} `;
-      //     text += `${diffMin} minute${diffMin !== 1 ? "s" : ""} left to expire`;
-      //     setExpiryCountdown(text);
-      //     setIsExpired(false);
-      //   }
-      // }
     }
     updateCountdown();
     interval = setInterval(updateCountdown, 60000); // update every minute
@@ -312,35 +289,42 @@ export default function ProductDetailPage() {
 
   const onOrderPlaced = async () => {
     if (!delivery_person_name) {
-      alert("Please enter the name of the delivery person.");
+      toast("Invalid details", {
+        description: "Please enter the name of the delivery person.",
+      });
       return;
     }
 
     if (!delivery_person_phone_no || delivery_person_phone_no.length !== 10) {
-      alert("Please enter a valid 10-digit phone number.");
+      toast("Invalid details", {
+        description: "Please enter a valid 10-digit phone number.",
+      });
       return;
     }
 
     if (!serves || isNaN(Number(serves)) || Number(serves) < 1) {
-      alert("Please enter a valid number of serves (at least 1).");
+      toast("Invalid details", {
+        description: "Please enter a valid number of serves (at least 1).",
+      });
       return;
     }
 
     if (!otp || otp.length !== 4) {
-      alert("OTP must be exactly 4 digits.");
+      toast("Invalid details", {
+        description: "OTP must be exactly 4 digits.",
+      });
       return;
     }
 
     if (Number(selectedDonation?.serves) < Number(serves)) {
-      alert("Requested servering cannot be more than available.");
+      toast("Invalid details", {
+        description: "Requested servings cannot be more than available.",
+      });
       return;
     }
 
     try {
       const uniqueId = uuidv4();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
 
       if (!user) {
         toast("Error", {
@@ -408,6 +392,7 @@ export default function ProductDetailPage() {
       });
       console.log("Order placed successfully!");
       setIsOpen(false);
+      router.replace("/food-listing");
     } catch (error: any) {
       console.error("Error in onOrderPlaced:", error);
       toast("Fail", {

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { Button } from "../ui/button";
 import { useAuth } from "@/context/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ReceiptHistory() {
+  const supabase = createClient();
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

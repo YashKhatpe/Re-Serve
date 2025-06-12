@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type Orders = {
   id: string;
@@ -16,6 +15,7 @@ type Orders = {
 };
 
 export function NgoOrderDetails() {
+  const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Orders[]>([]);
   const router = useRouter();

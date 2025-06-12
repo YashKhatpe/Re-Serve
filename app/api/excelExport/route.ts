@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 interface OrderData {
   serves: number;
@@ -21,11 +20,10 @@ interface OrderData {
 }
 
 export async function GET() {
+  const supabase = await createClient();
   try {
-
     // Fetch data from Supabase
-    const { data, error } = await supabase
-      .from("orders") // Replace with your table name
+    const { data, error } = (await supabase.from("orders") // Replace with your table name
       .select(`
         serves,
         created_at,
@@ -33,10 +31,13 @@ export async function GET() {
         ngo:ngo_id (name),
         delivery_person_name,
         delivery_person_phone_no
-        `) as { data: OrderData[] | null; error: any };
+        `)) as { data: OrderData[] | null; error: any };
 
     if (error || !data) {
-      return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+      return NextResponse.json(
+        { error: (error as Error).message },
+        { status: 500 }
+      );
     }
 
     // Transform data
@@ -65,7 +66,8 @@ export async function GET() {
     return new NextResponse(Buffer.from(excelBuffer), {
       status: 200,
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": "attachment; filename=donations.xlsx",
       },
     });

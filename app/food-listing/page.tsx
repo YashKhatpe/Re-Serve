@@ -1,11 +1,10 @@
 "use client";
-import { SetStateAction, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Filter, MapPin, Search } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
-import { supabase } from "@/lib/supabase";
 import { Donation, useDonation } from "@/context/donation-context";
 import MapClientWrapper from "@/components/food-map/MapClientWrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -25,10 +24,10 @@ import audioBufferToWav from "audiobuffer-to-wav";
 import { calculateDistance, extractLocationFromMapUrl } from "@/lib/mapUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 export default function FoodListingPage() {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userType, setUserType] = useState<"donor" | "ngo" | null>(null);
+  const supabase = createClient();
   const [donations, setDonations] = useState<Donation[] | []>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -50,43 +49,49 @@ export default function FoodListingPage() {
   const [voiceQuery, setVoiceQuery] = useState("");
   const [maxDistance, setMaxDistance] = useState(50); // Default max distance in km
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<string[]>([]);
+  const pathname = usePathname();
+  const [hasManuallyFiltered, setHasManuallyFiltered] = useState(false);
+
+  const previousPathRef = useRef<string | null>(null);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [ngoFoodPreferences, setNgoFoodPreferences] = useState<string[]>([]);
-
+  const { user, userType } = useAuth();
   useEffect(() => {
     async function checkAuth() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) {
         router.push("/login");
-        setUserType(null);
         return;
       }
-      setUserId(user.id);
-      const { data: donorData } = await supabase
-        .from("donor")
-        .select("id")
-        .eq("id", user.id)
-        .single();
-      setUserType(donorData ? "donor" : "ngo");
     }
     checkAuth();
   }, [router]);
+  useEffect(() => {
+    if (
+      previousPathRef.current !== null &&
+      previousPathRef.current !== pathname
+    ) {
+      // Route has changed
+      console.log("Route changed, run your logic");
+      fetchDonations();
+    }
+
+    // Update the ref to current path
+    previousPathRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     async function getUserLocationAndPreferences() {
       // If user is an NGO, try to get location and food_preference from their profile
-      if (userType === "ngo" && userId) {
+      if (userType === "ngo" && user?.id) {
         try {
           const { data: ngoData, error: ngoError } = await supabase
             .from("ngo")
             .select("address_map_link, food_preference")
-            .eq("id", userId)
+            .eq("id", user.id)
             .single();
 
           if (ngoError) {
@@ -124,70 +129,70 @@ export default function FoodListingPage() {
     }
     getUserLocationAndPreferences();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, userType]);
+  }, [user?.id, userType]);
 
-  useEffect(() => {
-    async function fetchDonations() {
-      let latLng = { lat: 0, lng: 0 };
-      const { data, error } = await supabase
-        .from("donor_form")
-        .select("*")
-        .gte("serves", 1);
-      if (error) {
-        console.error("Error fetching donations:", error);
-      } else {
-        const updatedDonations: Donation[] = [];
-        for (let donation of data) {
-          const { data: donorData, error: donorError } = await supabase
-            .from("donor")
-            .select("address_map_link")
-            .eq("id", donation.donor_id)
-            .single();
+  async function fetchDonations() {
+    let latLng = { lat: 0, lng: 0 };
+    const { data, error } = await supabase
+      .from("donor_form")
+      .select("*")
+      .gte("serves", 1);
+    if (error) {
+      console.error("Error fetching donations:", error);
+    } else {
+      const updatedDonations: Donation[] = [];
+      for (let donation of data) {
+        const { data: donorData, error: donorError } = await supabase
+          .from("donor")
+          .select("address_map_link")
+          .eq("id", donation.donor_id)
+          .single();
 
-          if (donorData && donorData.address_map_link) {
-            // Extract coordinates from the map URL
-            const locationResult = extractLocationFromMapUrl(
-              donorData.address_map_link
-            );
-            if (locationResult.location) {
-              latLng = locationResult.location;
-            }
+        if (donorData && donorData.address_map_link) {
+          // Extract coordinates from the map URL
+          const locationResult = extractLocationFromMapUrl(
+            donorData.address_map_link
+          );
+          if (locationResult.location) {
+            latLng = locationResult.location;
           }
-
-          // Calculate distance if user location is available
-          let distance = 0;
-          if (userLocation && latLng.lat !== 0 && latLng.lng !== 0) {
-            distance = calculateDistance(
-              userLocation.lat,
-              userLocation.lng,
-              latLng.lat,
-              latLng.lng
-            );
-          }
-
-          const updatedDonation: Donation = {
-            ...donation,
-            location: latLng,
-            distance: distance,
-          };
-          updatedDonations.push(updatedDonation);
         }
 
-        // Sort by distance
-        updatedDonations.sort((a, b) => a.distance - b.distance);
+        // Calculate distance if user location is available
+        let distance = 0;
+        if (userLocation && latLng.lat !== 0 && latLng.lng !== 0) {
+          distance = calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            latLng.lat,
+            latLng.lng
+          );
+        }
 
-        // Log unique food types for debugging
-        const uniqueFoodTypes = [
-          ...new Set(updatedDonations.map((d) => d.food_type)),
-        ];
-        console.log("Available food types:", uniqueFoodTypes);
-
-        setDonations(updatedDonations);
-        setFilteredDonations(updatedDonations);
+        const updatedDonation: Donation = {
+          ...donation,
+          location: latLng,
+          distance: distance,
+        };
+        updatedDonations.push(updatedDonation);
       }
+
+      // Sort by distance
+      updatedDonations.sort((a, b) => a.distance - b.distance);
+
+      // Log unique food types for debugging
+      const uniqueFoodTypes = [
+        ...new Set(updatedDonations.map((d) => d.food_type)),
+      ];
+      console.log("Available food types:", uniqueFoodTypes);
+
+      setDonations(updatedDonations);
+      setFilteredDonations(updatedDonations);
     }
+  }
+  useEffect(() => {
     fetchDonations();
-  }, [userLocation]);
+  }, [userLocation, router]);
 
   // Apply filters when any filter criteria changes
   useEffect(() => {
@@ -206,7 +211,13 @@ export default function FoodListingPage() {
     }
 
     // If user is NGO and has preferences, always filter by those
-    if (userType === "ngo" && ngoFoodPreferences.length > 0) {
+    console.log("Ngo preferences: ", ngoFoodPreferences);
+    console.log("Selected preferneces: ", selectedFoodTypes);
+    if (
+      !hasManuallyFiltered &&
+      userType === "ngo" &&
+      ngoFoodPreferences.length > 0
+    ) {
       filtered = filtered.filter((donation) =>
         ngoFoodPreferences.includes(donation.food_type)
       );
@@ -246,6 +257,7 @@ export default function FoodListingPage() {
     router.push(`/products/${donation.id}`);
   };
   const toggleFoodType = (type: string) => {
+    setHasManuallyFiltered(true);
     setSelectedFoodTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
@@ -319,7 +331,9 @@ export default function FoodListingPage() {
       recorder.onstop = () => {
         console.log("Audio chunks: ", audioChunksRef);
         // setRecordingStatus('Recording stopped. Processing...');
+        console.log("Sending audio to backend");
         sendAudioToBackend();
+        console.log("Sent audio to backend");
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
@@ -359,6 +373,7 @@ export default function FoodListingPage() {
       const fileReader = new FileReader();
       fileReader.readAsArrayBuffer(audioBlob);
 
+      console.log("In try block ");
       fileReader.onloadend = async () => {
         const audioContext = new AudioContext({
           sampleRate: SAMPLE_RATE,
@@ -404,6 +419,7 @@ export default function FoodListingPage() {
           const result = await response.json();
           setUserQuery(result.transcript);
           audioChunksRef.current = [];
+          console.log("Speech to text implemented");
 
           //send to gemini
           const filters = await sendTextToGemini(result.transcript);
@@ -420,7 +436,7 @@ export default function FoodListingPage() {
       console.error("Error sending audio:", err);
       setError("Error processing or sending audio");
     } finally {
-      setIsDialogOpen(false);
+      // setIsDialogOpen(false);
       setIsLoading(false);
       setIsRecording(false);
     }
@@ -501,7 +517,7 @@ export default function FoodListingPage() {
           console.warn(`Unsupported operator: ${operator}`);
       }
     });
-
+    console.log("filters: ", filters);
     const { data, error } = await query;
     if (error) {
       console.error("Supabase query error:", error.message);
