@@ -1,11 +1,14 @@
 'use client';
 
-import { JSX, useEffect, useState } from 'react';
+import { JSX, useEffect, useRef, useState } from 'react';
 import { Share2, Lock, Star, BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/context/auth-context';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import Certificate from '@/components/Certificate';
 
 type Badge = {
   title: string;
@@ -14,26 +17,29 @@ type Badge = {
   icon: JSX.Element;
 };
 
+
+
 const BADGES: Badge[] = [
   {
     title: 'Bronze Achievement',
     description: 'First milestone reached!',
     required: 100,
-    icon: <BadgeCheck className="text-orange-500 w-10 h-10" />,
+    icon: <BadgeCheck size={40} color="#f97316" />, // orange-500
   },
   {
     title: 'Silver Champion',
     description: 'Making a real difference!',
     required: 250,
-    icon: <BadgeCheck className="text-orange-500 w-10 h-10" />,
+    icon: <BadgeCheck size={40} color="#f97316" />,
   },
   {
     title: 'Gold Hero',
     description: 'Community champion!',
     required: 500,
-    icon: <Lock className="text-gray-300 w-10 h-10" />,
+    icon: <Lock size={40} color="#d1d5db" />, // gray-300
   },
 ];
+
 
 export default function Badges() {
   const { user } = useAuth();
@@ -42,6 +48,9 @@ export default function Badges() {
   const [mealsServed, setMealsServed] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const certificateRef = useRef<HTMLDivElement>(null);
+  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -55,12 +64,8 @@ export default function Badges() {
         if (!res.ok) throw new Error('Failed to fetch badge data');
         const data = await res.json();
 
-        console.log('Fetched badge data:', data); // DEBUG LOG
-
-        // Adjust key if necessary (based on your actual API response structure)
         setMealsServed(data.noOfPeopleServed ?? 0);
       } catch (err: any) {
-        console.error('Error fetching badge data:', err.message);
         setError(err.message || 'Something went wrong');
       } finally {
         setLoading(false);
@@ -96,7 +101,7 @@ export default function Badges() {
 
       {!loading && !error && mealsServed === 0 && (
         <div className="text-center text-sm text-gray-500 mb-10">
-          You haven’t served any meals yet. Start donating to earn your first badge!
+          You haven't served any meals yet. Start donating to earn your first badge!
         </div>
       )}
 
@@ -155,34 +160,50 @@ export default function Badges() {
                 <Button
                   variant="secondary"
                   className="mt-auto bg-gradient-to-r from-orange-400 to-yellow-400 text-white font-semibold hover:from-orange-500 hover:to-yellow-500"
-                  onClick={() => {
-                    const shareText = `I just earned the ${badge.title} badge on Re-Serve for helping feed the community! 🎉`;
-                    const shareUrl = 'https://re-serve.app';
+                  onClick={async () => {
+                    setSelectedBadge(badge);
 
-                    if (navigator.share) {
-                      navigator
-                        .share({
-                          title: badge.title,
-                          text: shareText,
-                          url: shareUrl,
-                        })
-                        .then(() => console.log('Badge shared successfully'))
-                        .catch((error) => console.error('Error sharing badge:', error));
-                    } else {
-                      alert('Sharing is not supported on this browser. Please copy the link manually.');
-                    }
+                    setTimeout(async () => {
+                      if (!certificateRef.current) return;
+
+                      const canvas = await html2canvas(certificateRef.current, {
+                        scale: 2, // higher quality
+                        useCORS: true,
+                      });
+                      const imgData = canvas.toDataURL('image/png');
+
+                      const pdf = new jsPDF({
+                        orientation: 'landscape', // 'portrait' or 'landscape'
+                        unit: 'px',
+                        format: [canvas.width, canvas.height],
+                      });
+
+                      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                      pdf.save(`${badge.title}-certificate.pdf`);
+
+                    }, 300); // allow render
                   }}
-
                 >
                   <Share2 className="w-5 h-5 mr-2" />
                   Share Achievement
                 </Button>
-
               )}
             </div>
           );
         })}
       </div>
+
+      {/* Hidden Certificate Preview */}
+      {selectedBadge && (
+        <div className="fixed -top-[2000px] left-0">
+          <Certificate
+            ref={certificateRef}
+            userName={user?.email?.split('@')[0] || 'Valued Donor'}
+            badge={selectedBadge}
+            mealsServed={mealsServed ?? 0}
+          />
+        </div>
+      )}
     </div>
   );
 }
