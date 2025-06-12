@@ -2,7 +2,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User, Session, AuthError } from "@supabase/supabase-js";
-
+// import { useRouter } from "next/navigation";
+// const router = useRouter();
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -99,6 +100,7 @@ export const AuthProvider = ({
         setUserType(null);
         // Refresh the page to clear any cached data
         window.location.href = "/";
+        // router.replace("/login");
       }
     });
 
@@ -220,6 +222,7 @@ export const AuthProvider = ({
         setLoading(false);
         return { error: error.message };
       }
+      setLoading(false);
 
       // onAuthStateChange will handle the state update and redirect
       return {};

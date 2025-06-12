@@ -9,6 +9,7 @@ import { useAuth } from "@/context/auth-context";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import Certificate from "@/components/Certificate";
+import { supabase } from "@/lib/supabase";
 
 type Badge = {
   title: string;
@@ -167,7 +168,7 @@ export default function Badges() {
   const [mealsServed, setMealsServed] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [userName, setUserName] = useState<any>("");
   const certificateRef = useRef<HTMLDivElement>(null);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -178,6 +179,16 @@ export default function Badges() {
         console.warn("Donor ID not available yet");
         return;
       }
+
+      const { data, error } = await supabase
+        .from("donor")
+        .select("name")
+        .eq("id", user.id)
+        .single(); // You can also use this if only one row is expected
+
+      if (error) throw error;
+
+      setUserName(data.name); // ✅ Set just the name string
 
       try {
         const res = await fetch(
@@ -355,7 +366,7 @@ export default function Badges() {
               ×
             </button>
             <Certificate
-              userName={user?.email?.split("@")[0] || "Valued Donor"}
+              userName={userName}
               badge={selectedBadge}
               mealsServed={mealsServed ?? 0}
             />
