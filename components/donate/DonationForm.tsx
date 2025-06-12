@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -33,8 +33,10 @@ const DonationForm: React.FC<DonationFormProps> = ({
   const supabase = createClient();
   const router = useRouter();
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setIsLoading(true);
     e.preventDefault();
     console.log("Form submitted:", formData);
     if (!user?.id) {
@@ -182,9 +184,10 @@ const DonationForm: React.FC<DonationFormProps> = ({
       toast("Donation Created", {
         description: "Your food donation has been listed successfully.",
       });
-
+      setIsLoading(false);
       router.push("/dashboard");
     } catch (error: any) {
+      setIsLoading(false);
       toast("Error Creating Donation", {
         description:
           error.message || "Could not create your donation. Please try again.",
@@ -566,9 +569,10 @@ const DonationForm: React.FC<DonationFormProps> = ({
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-gray-800 hover:bg-gray-900 text-white py-3 text-lg font-medium"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-lg font-medium"
+            disabled={isLoading}
           >
-            Create Donation
+            {isLoading ? "Creating Donation..." : "Create Donation"}
           </Button>
         </form>
       </CardContent>
