@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import JSZip from "jszip";
 import puppeteer from "puppeteer";
 
@@ -39,6 +39,7 @@ type Order = {
 };
 
 export async function GET(request: Request) {
+  const supabase = await createClient();
   try {
     // Get parameters from URL
     const url = new URL(request.url);

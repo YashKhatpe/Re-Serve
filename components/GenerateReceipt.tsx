@@ -25,7 +25,9 @@ export default function GenerateReceipt() {
 
   const handleGenerateReceipts = async () => {
     if (!startDate || !endDate) {
-      toast("Please select both start and end dates");
+      toast("Invalid details", {
+        description: "Please select both start and end dates",
+      });
       return;
     }
 
@@ -58,7 +60,9 @@ export default function GenerateReceipt() {
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       console.error("Error generating receipts:", error);
-      toast("Failed to generate tax receipts. Please try again.");
+      toast("Error!!!", {
+        description: "Failed to generate tax receipts. Please try again.",
+      });
     }
     setLoading(false);
   };

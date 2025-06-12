@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { z } from "zod";
-import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +22,8 @@ import { toast } from "sonner";
 import { FOOD_PREFERENCES } from "@/lib/constants";
 import BackButton from "@/components/BackButton";
 import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 const donorFormSchema = z
   .object({
@@ -90,9 +91,11 @@ export default function RegisterPage() {
 }
 
 function RegisterPageContent() {
+  const supabase = createClient();
   const [activeTab, setActiveTab] = useState("donor");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { signUp } = useAuth();
 
   useEffect(() => {
     const type = searchParams.get("tab") || "donor";
@@ -145,27 +148,25 @@ function RegisterPageContent() {
 
       const fssaiDetails = await fssaiResponse.json();
 
-      if (fssaiDetails.status === "404") {
-        return toast("Invalid FSSAI License", {
-          description: "The provided FSSAI license is not valid or not active.",
-        });
-      }
+      // if (fssaiDetails.status === "404") {
+      //   return toast("Invalid FSSAI License", {
+      //     description: "The provided FSSAI license is not valid or not active.",
+      //   });
+      // }
 
       try {
         // Create auth user
-        const { data: authData, error: authError } = await supabase.auth.signUp(
-          {
-            email: data.email,
-            password: data.password,
-          }
+        const { data: authData, error: authError } = await signUp(
+          data.email,
+          data.password
         );
 
         if (authError) throw authError;
 
-        if (authData.user) {
+        if (authData) {
           // Insert donor data with verified license - automatically set fssai_license_auto_verify to true
           const { error: donorError } = await supabase.from("donor").insert({
-            id: authData.user.id,
+            id: authData.user?.id,
             name: data.name,
             fssai_license: data.fssai_license,
             fssai_license_auto_verify: true, // Always set to true when license is valid
@@ -179,14 +180,17 @@ function RegisterPageContent() {
           });
 
           if (donorError) {
-            await supabase.auth.admin.deleteUser(authData.user.id);
+            if (authData.user) {
+              await supabase.auth.admin.deleteUser(authData.user.id);
+            }
             throw donorError;
           }
+
           toast("Registration successful!", {
-            description: "You can now log in to your donor account.",
+            description: "You are now logged in to your donor account.",
           });
 
-          router.push("/login");
+          router.push("/");
         }
       } catch (error: any) {
         toast("Registration Failed", {

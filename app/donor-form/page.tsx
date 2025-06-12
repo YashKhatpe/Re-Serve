@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 // Define type for form data
 interface FoodDonationForm {
@@ -343,7 +344,9 @@ export default function DonorFoodForm() {
       });
 
       if (response.ok) {
-        alert("Food donation details submitted successfully!");
+        toast("Success!!!", {
+          description: "Food donation details submitted successfully!",
+        });
         // Reset form
         setFormData({
           food_name: "",
@@ -357,10 +360,15 @@ export default function DonorFoodForm() {
         });
       } else {
         alert("Failed to submit donation details");
+        toast("Error!!", {
+          description: "Failed to submit donation details",
+        });
       }
     } catch (error) {
       console.error("Submission error:", error);
-      alert("Error submitting donation details");
+      toast("Error!!", {
+        description: "Error submitting donation details",
+      });
     }
   };
 

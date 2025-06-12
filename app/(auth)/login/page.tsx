@@ -1,7 +1,6 @@
-'use client';
-
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+"use client";
+import { useState } from "react";
+import { redirect, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { z } from "zod";
@@ -24,9 +23,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
+import { useEffect } from "react";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -34,16 +34,16 @@ const loginFormSchema = z.object({
 });
 
 export default function LoginPage() {
+  const supabase = createClient();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const { user } = useAuth();
-
+  const { user, loading, signIn } = useAuth();
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!loading && user) {
       router.push("/");
     }
-  }, [isLoading, user]);
+  }, [loading, user]);
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -55,11 +55,14 @@ export default function LoginPage() {
 
   async function onSubmit(data: z.infer<typeof loginFormSchema>) {
     setIsLoading(true);
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
+      const { error } = await signIn(data.email, data.password);
+
+      // const { error } = await supabase.auth.signInWithPassword({
+      //   email: data.email,
+      //   password: data.password,
+      // });
 
       if (error) throw error;
 
@@ -112,12 +115,14 @@ export default function LoginPage() {
             height={64}
           />
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Logging you in...</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Logging you in...
+            </h2>
             <p className="text-gray-600">
               Please wait while we log you into your dashboard.
             </p>
           </div>
-          <div className="h-6 w-6 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="h-6 w-6 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
 
@@ -125,18 +130,22 @@ export default function LoginPage() {
         <div className="container mx-auto px-6 py-12">
           <div className="flex flex-col lg:flex-row gap-12 items-center justify-around min-h-[70vh]">
             {/* Left Side - Hero Content */}
-            <div className="hidden lg:block w-full lg:w-1/2 space-y-6">
+            <div className="hidden lg:block w-full lg:w-1/2 space-y-6 ">
               <div className="space-y-2">
                 <h1 className="text-4xl lg:text-5xl font-bold text-[#2D3748] leading-tight">
-                  Welcome Back to <span className="text-[#FF6B35]">Re-Serve</span>
+                  Welcome Back to{" "}
+                  <span className="text-[#FF6B35]">Re-Serve</span>
                 </h1>
                 <p className="text-lg text-[#718096] leading-relaxed max-w-lg">
-                  Continue your mission of reducing food waste and serving those in
+                  Snue your mission of reducing food waste and serving those in
                   need. Together, we make every meal matter.
                 </p>
-                <div className="mt-4 text-sm text-gray-600">
+                <div className="mt-4 text-sm text-gray-600 ">
                   New here?{" "}
-                  <Link href="/register">
+                  <Link
+                    href="/register"
+                    className="text-[#FF6B35] font-semibold hover:underline px-2"
+                  >
                     <button className="w-24 h-8 bg-[#FF6B35] text-white hover:bg-[#E55A2B] rounded-xl font-medium text-base shadow-lg hover:shadow-xl transition-all">
                       Register
                     </button>
@@ -145,7 +154,7 @@ export default function LoginPage() {
               </div>
 
               {/* Stats */}
-              <div className="flex flex-wrap gap-8">
+              <div className="flex flex-wrap gap-8 ">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-[#FF6B35]">500+</div>
                   <div className="text-sm text-[#718096]">Meals Served</div>
@@ -181,7 +190,10 @@ export default function LoginPage() {
                 </CardHeader>
                 <CardContent>
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form
+                      onSubmit={form.handleSubmit(onSubmit)}
+                      className="space-y-4"
+                    >
                       <FormField
                         control={form.control}
                         name="email"

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import DonorDashboard from "../(donor)/donor-dashboard/page";
 import NgoDashboard from "../(ngo)/ngo-dashboard/page";
@@ -15,12 +15,16 @@ import GenerateReceipt from "@/components/GenerateReceipt";
 import Badges from "@/components/Badges";
 import ReceiptHistory from "@/components/dashboard/ReceiptHistory";
 import CurrentOrders from "@/components/CurrentOrders";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
-  const { userType } = useAuth();
+  const { user, userType } = useAuth();
   const [activeComponent, setActiveComponent] = useState<string>("dashboard");
   const isMobile = useIsMobile();
-
+  const router = useRouter();
+  useEffect(() => {
+    if (!user) router.replace("/login");
+  }, []);
   return (
     <div className="bg-gray-50">
       <DashNavbar />

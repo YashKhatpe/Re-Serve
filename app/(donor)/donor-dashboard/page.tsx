@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import GenerateReceipt from "@/components/GenerateReceipt";
 import { useAuth } from "@/context/auth-context";
+import { toast } from "sonner";
 
 type DashboardData = {
   todayTotalDonation: number;
@@ -79,11 +80,15 @@ export default function DonorDashboard() {
         window.open(previewUrl, "_blank");
       } else {
         const errorData = await response.json();
-        alert(errorData.error || "Failed to generate receipts.");
+        toast("Error in generating receipt.", {
+          description: "Failed to generate receipts.",
+        });
       }
     } catch (error) {
       console.error("Error generating receipts:", error);
-      alert("Something went wrong.");
+      toast("Error!!", {
+        description: "Error generating receipts.",
+      });
     } finally {
       setLoading(false);
     }

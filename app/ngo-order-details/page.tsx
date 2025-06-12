@@ -3,20 +3,26 @@
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type Orders = {
   id: string;
   serves: number;
-  otp: number; // Ensure it's treated as a number
+  otp: number;
   created_at: string;
   delivery_person_name: string;
   delivery_person_phone_no: number;
   delivery_status: "delivering" | "delivered";
+  donor:
+    | {
+        address_map_link: string;
+      }[]
+    | null; // In case the donor no longer exists
 };
 
 export default function NGOOrderDetailsPage() {
+  const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Orders[]>([]);
   const [otpInput, setOtpInput] = useState<{ [key: string]: string }>({});
@@ -47,7 +53,18 @@ export default function NGOOrderDetailsPage() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, serves, otp, created_at, delivery_person_name, delivery_person_phone_no, delivery_status"
+          `
+  id,
+  serves,
+  otp,
+  created_at,
+  delivery_person_name,
+  delivery_person_phone_no,
+  delivery_status,
+  donor:donor_id (
+    address_map_link
+  )
+`
         )
         .eq("ngo_id", userId);
 
@@ -119,7 +136,9 @@ export default function NGOOrderDetailsPage() {
           <table className="w-full border border-gray-300 bg-white shadow-md rounded-lg text-left">
             <thead>
               <tr className="bg-gray-100 text-gray-900">
-                <th className="p-4 border border-gray-300">Order ID</th>
+                <th className="p-4 border border-gray-300">
+                  Donor Address Map Link
+                </th>
                 <th className="p-4 border border-gray-300">Serves</th>
                 <th className="p-4 border border-gray-300">Delivery Person</th>
                 <th className="p-4 border border-gray-300">Contact</th>
@@ -131,7 +150,9 @@ export default function NGOOrderDetailsPage() {
             <tbody>
               {orders.map((order) => (
                 <tr key={order.id} className="border-b border-gray-300">
-                  <td className="p-4 border border-gray-300">{order.id}</td>
+                  <td className="p-4 border border-gray-300">
+                    {order.donor?.[0]?.address_map_link ?? "N/A"}
+                  </td>
                   <td className="p-4 border border-gray-300">{order.serves}</td>
                   <td className="p-4 border border-gray-300">
                     {order.delivery_person_name}
