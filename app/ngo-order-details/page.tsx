@@ -151,7 +151,19 @@ export default function NGOOrderDetailsPage() {
               {orders.map((order) => (
                 <tr key={order.id} className="border-b border-gray-300">
                   <td className="p-4 border border-gray-300">
-                    {order.donor?.[0]?.address_map_link ?? "N/A"}
+                    {order.donor?.[0]?.address_map_link ? (
+                      <a
+                        href={order.donor[0].address_map_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-orange-600 underline hover:text-orange-800"
+                        title={order.donor[0].address_map_link}
+                      >
+                        View Map
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
                   </td>
                   <td className="p-4 border border-gray-300">{order.serves}</td>
                   <td className="p-4 border border-gray-300">

@@ -362,6 +362,26 @@ export default function Badges() {
           </div>
         </div>
       )}
+      {/* Hidden Certificate for PDF generation */}
+      {selectedBadge && (
+        <div
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            top: 0,
+            width: 0,
+            height: 0,
+            overflow: "hidden",
+          }}
+        >
+          <Certificate
+            ref={certificateRef}
+            userName={user?.email?.split("@")[0] || "Valued Donor"}
+            badge={selectedBadge}
+            mealsServed={mealsServed ?? 0}
+          />
+        </div>
+      )}
     </div>
   );
 }

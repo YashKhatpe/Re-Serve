@@ -139,7 +139,7 @@ export default function DashOrderDetails() {
             <table className="w-full border border-gray-300 bg-white shadow-md rounded-lg text-left">
               <thead>
                 <tr className="bg-gray-100 text-gray-900">
-                  <th className="p-4 border border-gray-300">Order ID</th>
+                  <th className="p-4 border border-gray-300">Order Name</th>
                   <th className="p-4 border border-gray-300">
                     Delivery Status
                   </th>
