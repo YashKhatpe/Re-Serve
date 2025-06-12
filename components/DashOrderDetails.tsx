@@ -15,6 +15,7 @@ type Orders = {
   delivery_person_name: string;
   delivery_person_phone_no: number;
   delivery_status: "delivering" | "delivered";
+  donor_form: any;
 };
 
 export default function DashOrderDetails() {
@@ -50,7 +51,10 @@ export default function DashOrderDetails() {
                         created_at, 
                         delivery_person_name, 
                         delivery_person_phone_no, 
-                        delivery_status
+                        delivery_status,
+                        donor_form:donor_form_id (
+                            food_name
+                        )
                     `
         )
         .eq("donor_id", user.id);
@@ -139,7 +143,7 @@ export default function DashOrderDetails() {
             <table className="w-full border border-gray-300 bg-white shadow-md rounded-lg text-left">
               <thead>
                 <tr className="bg-gray-100 text-gray-900">
-                  <th className="p-4 border border-gray-300">Order ID</th>
+                  <th className="p-4 border border-gray-300">Food Name</th>
                   <th className="p-4 border border-gray-300">
                     Delivery Status
                   </th>
@@ -156,7 +160,9 @@ export default function DashOrderDetails() {
               <tbody>
                 {orders.map((order) => (
                   <tr key={order.id} className="border-b border-gray-300">
-                    <td className="p-4 border border-gray-300">{order.id}</td>
+                    <td className="p-4 border border-gray-300">
+                      {order.donor_form.food_name}
+                    </td>
                     <td className="p-4 border border-gray-300">
                       <span
                         className={`px-3 py-1 rounded-md font-medium ${

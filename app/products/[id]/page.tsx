@@ -58,11 +58,24 @@ export default function ProductDetailPage() {
   const [safetyError, setSafetyError] = useState("");
   const [expiryCountdown, setExpiryCountdown] = useState<string>("");
   const [isExpired, setIsExpired] = useState(false);
-
+  const [donorName, setDonorName] = useState("");
   const router = useRouter();
   const params = useParams();
   const donationId = params.id;
   const { user } = useAuth();
+
+  type DonorFormData = {
+    id: string;
+    food_name: string;
+    food_image: string;
+    food_type: string;
+    preparation_date_time: string;
+    serves: number;
+    storage: string;
+    preferred_pickup_time: string;
+    donor_id: string;
+    donor: { name: string }; // 👈 Not an array
+  };
 
   // Add userLocation state (if not already present)
   const [userLocation, setUserLocation] = useState<{
@@ -78,10 +91,14 @@ export default function ProductDetailPage() {
       const { data, error } = await supabase
         .from("donor_form")
         .select(
-          "id, food_name, food_image, food_type, preparation_date_time, serves, storage, preferred_pickup_time, donor_id"
+          `id, food_name, food_image, food_type, preparation_date_time, serves, storage, preferred_pickup_time, donor_id, donor:donor_id(name)`
         )
         .eq("id", donationId)
-        .single();
+        .single<DonorFormData>();
+
+      if (data) {
+        setDonorName(data.donor.name);
+      }
       console.log("Supabase data:", data, "error:", error);
       if (!error && data) {
         // Fetch donor's address_map_link
@@ -472,18 +489,25 @@ export default function ProductDetailPage() {
             {/* Main Content */}
             <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Food Image */}
-              <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden pt-0 h-fit pb-0">
-                <div className="relative">
-                  <img
-                    src={selectedDonation?.food_image}
-                    alt={selectedDonation?.food_name}
-                    className="w-full object-cover"
-                  />
-                  <div className="absolute top-4 right-4 bg-[#FF6B35] text-white px-4 py-2 rounded-full text-sm font-medium">
-                    {selectedDonation?.food_type}
+              <div>
+                <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden pt-0 h-fit pb-0">
+                  <div className="relative">
+                    <img
+                      src={selectedDonation?.food_image}
+                      alt={selectedDonation?.food_name}
+                      className="w-full object-cover"
+                    />
+                    <div className="absolute top-4 right-4 bg-[#FF6B35] text-white px-4 py-2 rounded-full text-sm font-medium">
+                      {selectedDonation?.food_type}
+                    </div>
                   </div>
+                </Card>
+                <div className="p-6 items-center min-w-max flex justify-center text-3xl">
+                  <h1 className="text-2xl lg:text-4xl font-bold text-[#2D3748] leading-tight">
+                    {donorName}
+                  </h1>
                 </div>
-              </Card>
+              </div>
 
               {/* Details Card */}
               <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl">

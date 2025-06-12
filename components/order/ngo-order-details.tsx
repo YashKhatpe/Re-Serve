@@ -12,9 +12,7 @@ type Orders = {
   delivery_person_name: string;
   delivery_person_phone_no: number;
   delivery_status: "delivering" | "delivered";
-  donor: {
-    address_map_link: string;
-  }; // In case the donor no longer exists
+  donor: any;
 };
 
 export function NgoOrderDetails() {
@@ -55,7 +53,8 @@ export function NgoOrderDetails() {
   delivery_person_phone_no,
   delivery_status,
   donor:donor_id (
-    address_map_link
+    address_map_link,
+    name
   )
 `
         )
@@ -83,6 +82,7 @@ export function NgoOrderDetails() {
           <table className="w-full border border-gray-300 bg-white shadow-md rounded-lg text-left">
             <thead>
               <tr className="bg-gray-100 text-gray-900">
+                <th className="p-4 border border-gray-300">Donor Name</th>
                 <th className="p-4 border border-gray-300">
                   Donor Address Map Link
                 </th>
@@ -97,7 +97,17 @@ export function NgoOrderDetails() {
               {orders.map((order) => (
                 <tr key={order.id} className="border-b border-gray-300">
                   <td className="p-4 border border-gray-300">
-                    {order.donor?.address_map_link ?? "N/A"}
+                    {order.donor?.name}
+                  </td>
+                  <td className="p-4 border border-gray-300">
+                    <button
+                      onClick={() =>
+                        window.open(order.donor?.address_map_link, "_blank")
+                      }
+                      className="text-blue-600 hover:underline hover:text-blue-800"
+                    >
+                      View Map
+                    </button>
                   </td>
                   <td className="p-4 border border-gray-300">{order.serves}</td>
                   <td className="p-4 border border-gray-300">
