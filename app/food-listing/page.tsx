@@ -195,6 +195,42 @@ export default function FoodListingPage() {
 
     let filtered = [...donations];
 
+    // Filter out expired donations based on food safety API shelf life
+    filtered = filtered.filter((donation) => {
+      let info = donation.food_safety_info;
+      if (typeof info === "string") {
+        try {
+          info = JSON.parse(info);
+        } catch {
+          info = undefined;
+        }
+      }
+      const storageTypeMap: Record<string, string> = {
+        room_temp: "Room Temp",
+        "Room Temp": "Room Temp",
+        refrigerated: "Refrigerated",
+        fridge: "Refrigerated",
+        Refrigerated: "Refrigerated",
+        frozen: "Frozen",
+        freezer: "Frozen",
+        Frozen: "Frozen",
+      };
+      const storage = donation.storage ?? "";
+      const apiStorageType =
+        storageTypeMap[storage as keyof typeof storageTypeMap] || storage;
+      const shelfLifeHours =
+        info && info.shelf_life && info.shelf_life[apiStorageType];
+      if (shelfLifeHours && !isNaN(Number(shelfLifeHours))) {
+        const prepTime = new Date(donation.preparation_date_time);
+        const expiryDate = new Date(
+          prepTime.getTime() + Number(shelfLifeHours) * 60 * 60 * 1000
+        );
+        return expiryDate > new Date();
+      }
+      // If no shelf life info, keep the donation (or you can choose to filter it out)
+      return true;
+    });
+
     // Apply search term filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -796,12 +832,52 @@ export default function FoodListingPage() {
                             <p className="text-[#718096] mb-3">
                               Serves {donation.serves} people
                             </p>
-                            {/* <p className="text-[#4A5568] mb-3">
-                              Expires:{" "}
-                              {new Date(
-                                donation.expiry_date_time
-                              ).toLocaleString()}
-                            </p> */}
+                            {(() => {
+                              let info = donation.food_safety_info;
+                              if (typeof info === "string") {
+                                try {
+                                  info = JSON.parse(info);
+                                } catch {
+                                  info = undefined;
+                                }
+                              }
+                              // Map storage type to API format
+                              const storageTypeMap = {
+                                room_temp: "Room Temp",
+                                "Room Temp": "Room Temp",
+                                refrigerated: "Refrigerated",
+                                fridge: "Refrigerated",
+                                Refrigerated: "Refrigerated",
+                                frozen: "Frozen",
+                                freezer: "Frozen",
+                                Frozen: "Frozen",
+                              };
+                              const apiStorageType = (donation.storage && storageTypeMap[donation.storage as keyof typeof storageTypeMap]) || 
+                                donation.storage;
+                                donation.storage;
+                              const shelfLifeHours =
+                                info &&
+                                info.shelf_life &&
+                                info.shelf_life[apiStorageType];
+                              if (
+                                shelfLifeHours &&
+                                !isNaN(Number(shelfLifeHours))
+                              ) {
+                                const prepTime = new Date(
+                                  donation.preparation_date_time
+                                );
+                                const expiryDate = new Date(
+                                  prepTime.getTime() +
+                                    Number(shelfLifeHours) * 60 * 60 * 1000
+                                );
+                                return (
+                                  <p className="text-[#4A5568] mb-3">
+                                    Expires: {expiryDate.toLocaleString()}
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
                             {donation.distance > 0 && (
                               <div className="flex items-center text-[#718096]">
                                 <MapPin
