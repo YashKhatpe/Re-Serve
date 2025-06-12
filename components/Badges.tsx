@@ -170,6 +170,7 @@ export default function Badges() {
 
   const certificateRef = useRef<HTMLDivElement>(null);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -289,63 +290,76 @@ export default function Badges() {
               )}
 
               {status === "unlocked" && (
-                <Button
-                  variant="secondary"
-                  className="mt-auto bg-gradient-to-r from-orange-400 to-yellow-400 text-white font-semibold hover:from-orange-500 hover:to-yellow-500"
-                  onClick={async () => {
-                    setSelectedBadge(badge);
-
-                    setTimeout(async () => {
-                      if (!certificateRef.current) return;
-
-                      const certEl = certificateRef.current;
-                      const prevStyles = overrideOklchAllColors(certEl);
-
-                      const canvas = await html2canvas(certEl, {
-                        scale: 2, // higher quality
-                        useCORS: true,
-                      });
-                      const imgData = canvas.toDataURL("image/png");
-
-                      // Restore previous CSS variable and style values
-                      restoreOklchAllColors(prevStyles);
-
-                      const pdf = new jsPDF({
-                        orientation: "landscape", // 'portrait' or 'landscape'
-                        unit: "px",
-                        format: [canvas.width, canvas.height],
-                      });
-
-                      pdf.addImage(
-                        imgData,
-                        "PNG",
-                        0,
-                        0,
-                        canvas.width,
-                        canvas.height
-                      );
-                      pdf.save(`${badge.title}-certificate.pdf`);
-                    }, 300); // allow render
-                  }}
-                >
-                  <Share2 className="w-5 h-5 mr-2" />
-                  Share Achievement
-                </Button>
+                <div className="flex flex-col gap-2 w-full">
+                  <Button
+                    variant="secondary"
+                    className="mt-auto bg-gradient-to-r from-orange-400 to-yellow-400 text-white font-semibold hover:from-orange-500 hover:to-yellow-500"
+                    onClick={async () => {
+                      setSelectedBadge(badge);
+                      setTimeout(async () => {
+                        if (!certificateRef.current) return;
+                        const certEl = certificateRef.current;
+                        const prevStyles = overrideOklchAllColors(certEl);
+                        const canvas = await html2canvas(certEl, {
+                          scale: 2, // higher quality
+                          useCORS: true,
+                        });
+                        const imgData = canvas.toDataURL("image/png");
+                        restoreOklchAllColors(prevStyles);
+                        const pdf = new jsPDF({
+                          orientation: "landscape", // 'portrait' or 'landscape'
+                          unit: "px",
+                          format: [canvas.width, canvas.height],
+                        });
+                        pdf.addImage(
+                          imgData,
+                          "PNG",
+                          0,
+                          0,
+                          canvas.width,
+                          canvas.height
+                        );
+                        pdf.save(`${badge.title}-certificate.pdf`);
+                      }, 300); // allow render
+                    }}
+                  >
+                    <Share2 className="w-5 h-5 mr-2" />
+                    Share Achievement
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-orange-400 text-orange-600 hover:bg-orange-50"
+                    onClick={() => {
+                      setSelectedBadge(badge);
+                      setShowPreview(true);
+                    }}
+                  >
+                    Preview Certificate
+                  </Button>
+                </div>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Hidden Certificate Preview */}
-      {selectedBadge && (
-        <div className="fixed -top-[2000px] left-0">
-          <Certificate
-            ref={certificateRef}
-            userName={user?.email?.split("@")[0] || "Valued Donor"}
-            badge={selectedBadge}
-            mealsServed={mealsServed ?? 0}
-          />
+      {/* Certificate Preview Modal */}
+      {showPreview && selectedBadge && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 relative max-w-3xl w-full flex flex-col items-center">
+            <button
+              className="absolute top-2 right-2 text-gray-500 text-2xl"
+              onClick={() => setShowPreview(false)}
+              aria-label="Close preview"
+            >
+              ×
+            </button>
+            <Certificate
+              userName={user?.email?.split("@")[0] || "Valued Donor"}
+              badge={selectedBadge}
+              mealsServed={mealsServed ?? 0}
+            />
+          </div>
         </div>
       )}
     </div>
