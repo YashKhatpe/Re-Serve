@@ -155,11 +155,29 @@ export default function Badges() {
                 <Button
                   variant="secondary"
                   className="mt-auto bg-gradient-to-r from-orange-400 to-yellow-400 text-white font-semibold hover:from-orange-500 hover:to-yellow-500"
-                  onClick={() => alert(`Share your achievement: ${badge.title}`)}
+                  onClick={() => {
+                    const shareText = `I just earned the ${badge.title} badge on Re-Serve for helping feed the community! 🎉`;
+                    const shareUrl = 'https://re-serve.app';
+
+                    if (navigator.share) {
+                      navigator
+                        .share({
+                          title: badge.title,
+                          text: shareText,
+                          url: shareUrl,
+                        })
+                        .then(() => console.log('Badge shared successfully'))
+                        .catch((error) => console.error('Error sharing badge:', error));
+                    } else {
+                      alert('Sharing is not supported on this browser. Please copy the link manually.');
+                    }
+                  }}
+
                 >
                   <Share2 className="w-5 h-5 mr-2" />
                   Share Achievement
                 </Button>
+
               )}
             </div>
           );

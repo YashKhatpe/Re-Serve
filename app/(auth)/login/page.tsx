@@ -26,6 +26,9 @@ import {
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -35,11 +38,14 @@ const loginFormSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false); // Loader state
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const { user } = useAuth();
-  if (user) {
-    redirect("/");
-  }
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.push("/");
+    }
+  }, [isLoading, user]);
+
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -63,11 +69,9 @@ export default function LoginPage() {
         description: "You are now logged in.",
       });
 
-      // Delay redirection slightly and show loader
-      setIsRedirecting(true); // Show loader
+      setIsRedirecting(true);
 
       setTimeout(async () => {
-        // Check if user is donor or NGO and redirect accordingly
         const { data: donorData } = await supabase
           .from("donor")
           .select("id")
@@ -89,7 +93,7 @@ export default function LoginPage() {
             router.push("/");
           }
         }
-      }, 1500); // 1.5 sec delay before redirect
+      }, 1500);
     } catch (error: any) {
       toast("Login Failed", {
         description: error.message || "Invalid email or password.",
