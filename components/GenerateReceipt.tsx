@@ -35,11 +35,29 @@ export default function GenerateReceipt() {
     try {
       const formattedStartDate = format(startDate, "yyyy-MM-dd");
       const formattedEndDate = format(endDate, "yyyy-MM-dd");
-
-      window.open(
-        `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
-        "_blank"
-      );
+      const url = `/api/generate-receipts?startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        // Try to parse error message
+        let errorMsg = "Failed to generate tax receipts. Please try again.";
+        try {
+          const data = await response.json();
+          if (data && data.error) errorMsg = data.error;
+        } catch {}
+        toast(errorMsg);
+        setLoading(false);
+        return;
+      }
+      // If response is a file, trigger download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `donation_receipts_${formattedStartDate}_to_${formattedEndDate}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       console.error("Error generating receipts:", error);
       toast("Error!!!", {
@@ -73,7 +91,7 @@ export default function GenerateReceipt() {
               className={showHistory ? "bg-orange-500 text-white" : ""}
               onClick={() => setShowHistory(true)}
             >
-              Receipt History
+              Order History
             </Button>
           </div>
         </CardHeader>
